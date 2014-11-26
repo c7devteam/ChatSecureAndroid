@@ -1231,7 +1231,7 @@ public class ImpsProvider extends ContentProvider {
     }
 
     @Override
-    public final Uri insert(final Uri url, final ContentValues values) {
+    public final Uri insert(final Uri uri, final ContentValues values) {
         Uri result = null;
 
         if (getDBHelper() != null)
@@ -1245,21 +1245,21 @@ public class ImpsProvider extends ContentProvider {
                     {
                         db.beginTransaction();
                         try {
-                            result = insertInternal(url, values);
+                            result = insertInternal(uri, values);
                             db.setTransactionSuccessful();
                         } finally {
                             db.endTransaction();
                         }
                         if (result != null) {
                             getContext().getContentResolver()
-                                    .notifyChange(url, null /* observer */, false /* sync */);
+                                    .notifyChange(uri, null /* observer */, false /* sync */);
                         }
                     }
                 }
             }
             catch (IllegalStateException ise)
             {
-                log("database closed when insert attempted: " + url.toString());
+                log("database closed when insert attempted: " + uri.toString());
             }
         }
         return result;
@@ -1273,7 +1273,7 @@ public class ImpsProvider extends ContentProvider {
 
     boolean mLoadedLibs = false;
 
-    public Cursor queryInternal(Uri url, String[] projectionIn, String selection,
+    public Cursor queryInternal(Uri uri, String[] projectionIn, String selection,
             String[] selectionArgs, String sort) {
 
         Debug.onServiceStart();
@@ -1292,9 +1292,9 @@ public class ImpsProvider extends ContentProvider {
         String groupBy = null;
         String limit = null;
 
-        String pkey = url.getQueryParameter(ImApp.CACHEWORD_PASSWORD_KEY);
-        boolean noCreate = "1".equals(url.getQueryParameter(ImApp.NO_CREATE_KEY));
-        boolean clearKey = "1".equals(url.getQueryParameter(ImApp.CLEAR_PASSWORD_KEY));
+        String pkey = uri.getQueryParameter(ImApp.CACHEWORD_PASSWORD_KEY);
+        boolean noCreate = "1".equals(uri.getQueryParameter(ImApp.NO_CREATE_KEY));
+        boolean clearKey = "1".equals(uri.getQueryParameter(ImApp.CLEAR_PASSWORD_KEY));
 
         if (clearKey) {
             if (mDbHelper != null) {
@@ -1355,7 +1355,7 @@ public class ImpsProvider extends ContentProvider {
         */
 
         // Generate the body of the query
-        int match = mUrlMatcher.match(url);
+        int match = mUrlMatcher.match(uri);
 
          {
             //log("query " + url + ", match " + match + ", where " + selection);
@@ -1368,7 +1368,7 @@ public class ImpsProvider extends ContentProvider {
 
         switch (match) {
         case MATCH_PROVIDERS_BY_ID:
-            appendWhere(whereClause, Imps.Provider._ID, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.Provider._ID, "=", uri.getPathSegments().get(1));
             // fall thru.
 
         case MATCH_PROVIDERS:
@@ -1386,7 +1386,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_ACCOUNTS_BY_ID:
-            appendWhere(whereClause, Imps.Account._ID, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.Account._ID, "=", uri.getPathSegments().get(1));
             // falls down
         case MATCH_ACCOUNTS:
             qb.setTables(TABLE_ACCOUNTS);
@@ -1415,31 +1415,31 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_CONTACTS_BY_PROVIDER:
-            buildQueryContactsByProvider(qb, whereClause, url);
+            buildQueryContactsByProvider(qb, whereClause, uri);
             appendWhere(whereClause, NON_BLOCKED_CONTACTS_WHERE_CLAUSE);
             break;
 
         case MATCH_CHATTING_CONTACTS_BY_PROVIDER:
-            buildQueryContactsByProvider(qb, whereClause, url);
+            buildQueryContactsByProvider(qb, whereClause, uri);
             appendWhere(whereClause, "chats.last_message_date IS NOT NULL");
             // no need to add the non blocked contacts clause because
             // blocked contacts can't have conversations.
             break;
 
         case MATCH_NO_CHATTING_CONTACTS_BY_PROVIDER:
-            buildQueryContactsByProvider(qb, whereClause, url);
+            buildQueryContactsByProvider(qb, whereClause, uri);
             appendWhere(whereClause, "chats.last_message_date IS NULL");
             appendWhere(whereClause, NON_BLOCKED_CONTACTS_WHERE_CLAUSE);
             break;
 
         case MATCH_ONLINE_CONTACTS_BY_PROVIDER:
-            buildQueryContactsByProvider(qb, whereClause, url);
+            buildQueryContactsByProvider(qb, whereClause, uri);
             appendWhere(whereClause, Imps.Contacts.PRESENCE_STATUS, "!=", Imps.Presence.OFFLINE);
             appendWhere(whereClause, NON_BLOCKED_CONTACTS_WHERE_CLAUSE);
             break;
 
         case MATCH_OFFLINE_CONTACTS_BY_PROVIDER:
-            buildQueryContactsByProvider(qb, whereClause, url);
+            buildQueryContactsByProvider(qb, whereClause, uri);
             appendWhere(whereClause, Imps.Contacts.PRESENCE_STATUS, "=", Imps.Presence.OFFLINE);
             appendWhere(whereClause, NON_BLOCKED_CONTACTS_WHERE_CLAUSE);
             break;
@@ -1453,7 +1453,7 @@ public class ImpsProvider extends ContentProvider {
         case MATCH_CONTACT:
             qb.setTables(CONTACT_JOIN_PRESENCE_CHAT_AVATAR_TABLE);
             qb.setProjectionMap(sContactsProjectionMap);
-            appendWhere(whereClause, "contacts._id", "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, "contacts._id", "=", uri.getPathSegments().get(1));
             break;
 
         case MATCH_ONLINE_CONTACT_COUNT:
@@ -1466,7 +1466,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_CONTACTLISTS_BY_PROVIDER:
-            appendWhere(whereClause, Imps.ContactList.ACCOUNT, "=", url.getPathSegments().get(2));
+            appendWhere(whereClause, Imps.ContactList.ACCOUNT, "=", uri.getPathSegments().get(2));
             // fall through
         case MATCH_CONTACTLISTS:
             qb.setTables(TABLE_CONTACT_LIST);
@@ -1475,7 +1475,7 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_CONTACTLIST:
             qb.setTables(TABLE_CONTACT_LIST);
-            appendWhere(whereClause, Imps.ContactList._ID, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.ContactList._ID, "=", uri.getPathSegments().get(1));
             break;
 
         case MATCH_BLOCKEDLIST:
@@ -1486,7 +1486,7 @@ public class ImpsProvider extends ContentProvider {
         case MATCH_BLOCKEDLIST_BY_PROVIDER:
             qb.setTables(BLOCKEDLIST_JOIN_AVATAR_TABLE);
             qb.setProjectionMap(sBlockedListProjectionMap);
-            appendWhere(whereClause, Imps.BlockedList.ACCOUNT, "=", url.getPathSegments().get(2));
+            appendWhere(whereClause, Imps.BlockedList.ACCOUNT, "=", uri.getPathSegments().get(2));
             break;
 
         case MATCH_CONTACTS_ETAGS:
@@ -1495,11 +1495,11 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_CONTACTS_ETAG:
             qb.setTables(TABLE_CONTACTS_ETAG);
-            appendWhere(whereClause, "_id", "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, "_id", "=", uri.getPathSegments().get(1));
             break;
 
         case MATCH_MESSAGES_BY_THREAD_ID:
-            appendWhere(whereClause, Imps.Messages.THREAD_ID, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.Messages.THREAD_ID, "=", uri.getPathSegments().get(1));
             // fall thru.
 
         case MATCH_MESSAGES:
@@ -1528,21 +1528,21 @@ public class ImpsProvider extends ContentProvider {
 
             Cursor c = db.rawQueryWithFactory(null, query, doubleArgs, TABLE_MESSAGES);
             if ((c != null) && !isTemporary()) {
-                c.setNotificationUri(getContext().getContentResolver(), url);
+                c.setNotificationUri(getContext().getContentResolver(), uri);
             }
             return c;
 
         case MATCH_MESSAGE:
             qb.setTables(TABLE_MESSAGES);
-            appendWhere(whereClause, Imps.Messages._ID, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.Messages._ID, "=", uri.getPathSegments().get(1));
             break;
 
         case MATCH_MESSAGES_BY_CONTACT:
             qb.setTables(MESSAGE_JOIN_CONTACT_TABLE);
             qb.setProjectionMap(sMessagesProjectionMap);
 
-            appendWhere(whereClause, Imps.Contacts.ACCOUNT, "=", url.getPathSegments().get(1));
-            appendWhere(whereClause, "contacts.username", "=", decodeURLSegment(url
+            appendWhere(whereClause, Imps.Contacts.ACCOUNT, "=", uri.getPathSegments().get(1));
+            appendWhere(whereClause, "contacts.username", "=", decodeURLSegment(uri
                     .getPathSegments().get(2)));
 
             final String sel = whereClause.toString();
@@ -1559,7 +1559,7 @@ public class ImpsProvider extends ContentProvider {
             final SQLiteDatabase db2 = getDBHelper().getWritableDatabase();
             Cursor c2 = db2.rawQueryWithFactory(null, q3, null, MESSAGE_JOIN_CONTACT_TABLE);
             if ((c2 != null) && !isTemporary()) {
-                c2.setNotificationUri(getContext().getContentResolver(), url);
+                c2.setNotificationUri(getContext().getContentResolver(), uri);
             }
             return c2;
 
@@ -1569,7 +1569,7 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_INVITATION:
             qb.setTables(TABLE_INVITATIONS);
-            appendWhere(whereClause, Imps.Invitation._ID, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.Invitation._ID, "=", uri.getPathSegments().get(1));
             break;
 
         case MATCH_GROUP_MEMBERS:
@@ -1578,7 +1578,7 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_GROUP_MEMBERS_BY_GROUP:
             qb.setTables(TABLE_GROUP_MEMBERS);
-            appendWhere(whereClause, Imps.GroupMembers.GROUP, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.GroupMembers.GROUP, "=", uri.getPathSegments().get(1));
             break;
 
         case MATCH_AVATARS:
@@ -1587,7 +1587,7 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_AVATAR_BY_PROVIDER:
             qb.setTables(TABLE_AVATARS);
-            appendWhere(whereClause, Imps.Avatars.ACCOUNT, "=", url.getPathSegments().get(2));
+            appendWhere(whereClause, Imps.Avatars.ACCOUNT, "=", uri.getPathSegments().get(2));
             break;
 
         case MATCH_CHATS:
@@ -1596,12 +1596,12 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_CHATS_ID:
             qb.setTables(TABLE_CHATS);
-            appendWhere(whereClause, Imps.Chats.CONTACT_ID, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.Chats.CONTACT_ID, "=", uri.getPathSegments().get(1));
             break;
 
         case MATCH_CHATS_BY_ACCOUNT:
             qb.setTables(TABLE_CHATS);
-            String accountStr = decodeURLSegment(url.getLastPathSegment());
+            String accountStr = decodeURLSegment(uri.getLastPathSegment());
             appendWhere(
                     whereClause,
                     buildContactIdSelection(Imps.Chats.CONTACT_ID, Imps.Contacts.ACCOUNT + "='"
@@ -1614,7 +1614,7 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_PRESENCE_ID:
             qb.setTables(TABLE_PRESENCE);
-            appendWhere(whereClause, Imps.Presence.CONTACT_ID, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.Presence.CONTACT_ID, "=", uri.getPathSegments().get(1));
             break;
 
         case MATCH_SESSIONS:
@@ -1623,14 +1623,14 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_SESSIONS_BY_PROVIDER:
             qb.setTables(TABLE_SESSION_COOKIES);
-            appendWhere(whereClause, Imps.SessionCookies.ACCOUNT, "=", url.getPathSegments().get(2));
+            appendWhere(whereClause, Imps.SessionCookies.ACCOUNT, "=", uri.getPathSegments().get(2));
             break;
 
         case MATCH_PROVIDER_SETTINGS_BY_ID_AND_NAME:
-            appendWhere(whereClause, Imps.ProviderSettings.NAME, "=", url.getPathSegments().get(2));
+            appendWhere(whereClause, Imps.ProviderSettings.NAME, "=", uri.getPathSegments().get(2));
             // fall through
         case MATCH_PROVIDER_SETTINGS_BY_ID:
-            appendWhere(whereClause, Imps.ProviderSettings.PROVIDER, "=", url.getPathSegments()
+            appendWhere(whereClause, Imps.ProviderSettings.PROVIDER, "=", uri.getPathSegments()
                     .get(1));
             // fall through
         case MATCH_PROVIDER_SETTINGS:
@@ -1643,7 +1643,7 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_ACCOUNT_STATUS:
             qb.setTables(TABLE_ACCOUNT_STATUS);
-            appendWhere(whereClause, Imps.AccountStatus.ACCOUNT, "=", url.getPathSegments().get(1));
+            appendWhere(whereClause, Imps.AccountStatus.ACCOUNT, "=", uri.getPathSegments().get(1));
             break;
 
         case MATCH_BRANDING_RESOURCE_MAP_CACHE:
@@ -1671,7 +1671,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         default:
-            throw new IllegalArgumentException("Unknown URL " + url);
+            throw new IllegalArgumentException("Unknown URL " + uri);
         }
 
         if (getDBHelper() == null)
@@ -1705,14 +1705,14 @@ public class ImpsProvider extends ContentProvider {
                 case MATCH_CONTACTS_BAREBONE:
                 case MATCH_CONTACTS_JOIN_PRESENCE:
                 case MATCH_ONLINE_CONTACT_COUNT:
-                    url = Imps.Contacts.CONTENT_URI;
+                    uri = Imps.Contacts.CONTENT_URI;
                     break;
                 }
                 
-                    log("set notify url " + url);
+                    log("set notify url " + uri);
 
 
-                c.setNotificationUri(getContext().getContentResolver(), url);
+                c.setNotificationUri(getContext().getContentResolver(), uri);
             }
 
         //    c = new MyCrossProcessCursorWrapper(c);
@@ -2398,7 +2398,7 @@ public class ImpsProvider extends ContentProvider {
         return sum;
     }
 
-    private Uri insertInternal(Uri url, ContentValues initialValues) {
+    private Uri insertInternal(Uri uri, ContentValues initialValues) {
         Uri resultUri = null;
         long rowID = 0;
         long account = 0;
@@ -2413,10 +2413,10 @@ public class ImpsProvider extends ContentProvider {
         boolean notifyProviderAccountContentUri = false;
 
         final SQLiteDatabase db = getDBHelper().getWritableDatabase();
-        int match = mUrlMatcher.match(url);
+        int match = mUrlMatcher.match(uri);
 
         
-            log("insert to " + url + ", match " + match);
+            log("insert to " + uri + ", match " + match);
         switch (match) {
         case MATCH_PROVIDERS:
             // Insert into the providers table
@@ -2437,7 +2437,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_CONTACTS_BY_PROVIDER:
-            appendValuesFromUrl(initialValues, url, Imps.Contacts.PROVIDER, Imps.Contacts.ACCOUNT);
+            appendValuesFromUrl(initialValues, uri, Imps.Contacts.PROVIDER, Imps.Contacts.ACCOUNT);
             // fall through
         case MATCH_CONTACTS:
         case MATCH_CONTACTS_BAREBONE:
@@ -2461,7 +2461,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_CONTACTLISTS_BY_PROVIDER:
-            appendValuesFromUrl(initialValues, url, Imps.ContactList.PROVIDER,
+            appendValuesFromUrl(initialValues, uri, Imps.ContactList.PROVIDER,
                     Imps.ContactList.ACCOUNT);
             // fall through
         case MATCH_CONTACTLISTS:
@@ -2474,7 +2474,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_BLOCKEDLIST_BY_PROVIDER:
-            appendValuesFromUrl(initialValues, url, Imps.BlockedList.PROVIDER,
+            appendValuesFromUrl(initialValues, uri, Imps.BlockedList.PROVIDER,
                     Imps.BlockedList.ACCOUNT);
             // fall through
         case MATCH_BLOCKEDLIST:
@@ -2494,14 +2494,14 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_MESSAGES_BY_CONTACT:
-            String accountStr = decodeURLSegment(url.getPathSegments().get(1));
+            String accountStr = decodeURLSegment(uri.getPathSegments().get(1));
             try {
                 account = Long.parseLong(accountStr);
             } catch (NumberFormatException ex) {
                 throw new IllegalArgumentException();
             }
 
-            contact = decodeURLSegment(url.getPathSegments().get(2));
+            contact = decodeURLSegment(uri.getPathSegments().get(2));
             initialValues.put(Imps.Messages.THREAD_ID, getContactId(db, accountStr, contact));
 
             notifyMessagesContentUri = true;
@@ -2515,7 +2515,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_MESSAGES_BY_THREAD_ID:
-            appendValuesFromUrl(initialValues, url, Imps.Messages.THREAD_ID);
+            appendValuesFromUrl(initialValues, uri, Imps.Messages.THREAD_ID);
             // fall through
 
         case MATCH_MESSAGES:
@@ -2529,7 +2529,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_OTR_MESSAGES_BY_CONTACT:
-            String accountStr2 = decodeURLSegment(url.getPathSegments().get(1));
+            String accountStr2 = decodeURLSegment(uri.getPathSegments().get(1));
 
             try {
                 account = Long.parseLong(accountStr2);
@@ -2537,7 +2537,7 @@ public class ImpsProvider extends ContentProvider {
                 throw new IllegalArgumentException();
             }
 
-            contact = decodeURLSegment(url.getPathSegments().get(2));
+            contact = decodeURLSegment(uri.getPathSegments().get(2));
             initialValues.put(Imps.Messages.THREAD_ID, getContactId(db, accountStr2, contact));
 
             notifyMessagesByContactContentUri = true;
@@ -2552,7 +2552,7 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_OTR_MESSAGES_BY_THREAD_ID:
             try {
-                threadId = Long.parseLong(decodeURLSegment(url.getPathSegments().get(1)));
+                threadId = Long.parseLong(decodeURLSegment(uri.getPathSegments().get(1)));
             } catch (NumberFormatException ex) {
                 throw new IllegalArgumentException();
             }
@@ -2586,7 +2586,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_GROUP_MEMBERS_BY_GROUP:
-            appendValuesFromUrl(initialValues, url, Imps.GroupMembers.GROUP);
+            appendValuesFromUrl(initialValues, uri, Imps.GroupMembers.GROUP);
             rowID = db.insert(TABLE_GROUP_MEMBERS, "nickname", initialValues);
             if (rowID > 0) {
                 resultUri = Uri.parse(Imps.GroupMembers.CONTENT_URI + "/" + rowID);
@@ -2594,7 +2594,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_AVATAR_BY_PROVIDER:
-            appendValuesFromUrl(initialValues, url, Imps.Avatars.PROVIDER, Imps.Avatars.ACCOUNT);
+            appendValuesFromUrl(initialValues, uri, Imps.Avatars.PROVIDER, Imps.Avatars.ACCOUNT);
             // fall through
         case MATCH_AVATARS:
             // Insert into the avatars table
@@ -2605,7 +2605,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_CHATS_ID:
-            appendValuesFromUrl(initialValues, url, Imps.Chats.CONTACT_ID);
+            appendValuesFromUrl(initialValues, uri, Imps.Chats.CONTACT_ID);
             // fall through
         case MATCH_CHATS:
             // Insert into the chats table
@@ -2629,7 +2629,7 @@ public class ImpsProvider extends ContentProvider {
 
         case MATCH_PRESENCE_SEED_BY_ACCOUNT:
             try {
-                seedInitialPresenceByAccount(Long.parseLong(url.getLastPathSegment()));
+                seedInitialPresenceByAccount(Long.parseLong(uri.getLastPathSegment()));
                 resultUri = Imps.Presence.CONTENT_URI;
             } catch (NumberFormatException ex) {
                 throw new IllegalArgumentException();
@@ -2637,7 +2637,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         case MATCH_SESSIONS_BY_PROVIDER:
-            appendValuesFromUrl(initialValues, url, Imps.SessionCookies.PROVIDER,
+            appendValuesFromUrl(initialValues, uri, Imps.SessionCookies.PROVIDER,
                     Imps.SessionCookies.ACCOUNT);
             // fall through
         case MATCH_SESSIONS:
@@ -2692,7 +2692,7 @@ public class ImpsProvider extends ContentProvider {
             break;
 
         default:
-            throw new UnsupportedOperationException("Cannot insert into URL: " + url);
+            throw new UnsupportedOperationException("Cannot insert into URL: " + uri);
         }
         // TODO: notify the data change observer?
 

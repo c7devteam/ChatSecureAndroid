@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -67,7 +67,8 @@ import android.widget.Toast;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.viewpagerindicator.PageIndicator;
 
-public class AccountWizardActivity extends ActionBarActivity implements View.OnCreateContextMenuListener {
+public class AccountWizardActivity extends ActionBarActivity implements
+        View.OnCreateContextMenuListener {
 
     private static final String TAG = ImApp.LOG_TAG;
 
@@ -79,10 +80,9 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
 
     private static final int REQUEST_CREATE_ACCOUNT = RESULT_FIRST_USER + 2;
 
-
     /**
-     * The pager widget, which handles animation and allows swiping horizontally to access previous
-     * and next wizard steps.
+     * The pager widget, which handles animation and allows swiping horizontally
+     * to access previous and next wizard steps.
      */
     private ViewPager mPager;
 
@@ -95,14 +95,14 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
     @Override
     protected void onCreate(Bundle icicle) {
 
-        if(Build.VERSION.SDK_INT >= 11)
+        if (Build.VERSION.SDK_INT >= 11)
             getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
 
         super.onCreate(icicle);
 
         getSupportActionBar().hide();
 
-        mApp = (ImApp)getApplication();
+        mApp = (ImApp) getApplication();
         mApp.maybeInit(this);
         mApp.setAppTheme(this);
 
@@ -151,8 +151,6 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
         super.onDestroy();
     }
 
-
-
     @Override
     protected void onResume() {
 
@@ -162,9 +160,7 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
 
     }
 
-
-    protected void gotoChats()
-    {
+    protected void gotoChats() {
 
         Intent intent = new Intent(this, NewChatActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -176,9 +172,8 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void doHardShutdown() {
 
-        for (IImConnection conn : mApp.getActiveConnections())
-        {
-               try {
+        for (IImConnection conn : mApp.getActiveConnections()) {
+            try {
                 conn.logout();
             } catch (RemoteException e) {
                 // TODO Auto-generated catch block
@@ -195,7 +190,8 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
-   }
+    }
+
     public void signOut(final long accountId) {
         // Remember that the user signed out and do not auto sign in until they
         // explicitly do so
@@ -211,14 +207,12 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
         }
     }
 
-
     private void setKeepSignedIn(final long accountId, boolean signin) {
         Uri mAccountUri = ContentUris.withAppendedId(Imps.Account.CONTENT_URI, accountId);
         ContentValues values = new ContentValues();
         values.put(Imps.Account.KEEP_SIGNED_IN, signin);
         getContentResolver().update(mAccountUri, values, null, null);
     }
-
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
@@ -229,7 +223,7 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         //MenuInflater inflater = getSupportMenuInflater();
-       // inflater.inflate(R.menu.accounts_menu, menu);
+        // inflater.inflate(R.menu.accounts_menu, menu);
         return true;
     }
 
@@ -240,19 +234,19 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
             doHardShutdown();
             return true;
         case R.id.menu_add_account:
-         //   showExistingAccountListDialog();
+            //   showExistingAccountListDialog();
             return true;
         case R.id.menu_settings:
             Intent sintent = new Intent(this, SettingActivity.class);
-            startActivityForResult(sintent,0);
+            startActivityForResult(sintent, 0);
             return true;
         case R.id.menu_import_keys:
             importKeyStore();
             return true;
-       // case R.id.menu_exit:
-      //      signOutAndKillProcess();
+            // case R.id.menu_exit:
+            //      signOutAndKillProcess();
 
-          //  return true;
+            //  return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -262,27 +256,34 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
 
     private ImPluginHelper helper = ImPluginHelper.getInstance(this);
 
-    private void importKeyStore ()
-    {
+    private void importKeyStore() {
         boolean doKeyStoreImport = OtrAndroidKeyManagerImpl.checkForKeyImport(getIntent(), this);
 
     }
 
-    private void exportKeyStore ()
-    {
+    private void exportKeyStore() {
         //boolean doKeyStoreExport = OtrAndroidKeyManagerImpl.getInstance(this).doKeyStoreExport(password);
 
     }
 
     Account[] mGoogleAccounts;
 
-    private void buildAccountList ()
-    {
+    private void buildAccountList() {
+        /**
+         * Allow only Cube7 Account
+         */
+        if (ImApp.ONLY_CUBE7) {
+            mAccountList = new String[1][2];
+            mAccountList[0][0] = getString(R.string.i_have_an_existing_cube7_account);
+            mAccountList[0][0] = getString(R.string.cube7_account_existing_full); 
+            return;
+        }
+
         List<String> listProviders = helper.getProviderNames();
 
         mGoogleAccounts = AccountManager.get(this).getAccountsByType(GTalkOAuth2.TYPE_GOOGLE_ACCT);
 
-        mAccountList = new String[listProviders.size()+3][2]; //potentialProviders + google + create account + burner
+        mAccountList = new String[listProviders.size() + 3][2]; //potentialProviders + google + create account + burner
 
         int i = 0;
 
@@ -305,116 +306,97 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
 
     /* CHANGE phoenix_nz - add "Create Account" to List */
     /**
-    void showExistingAccountListDialog() {
+     * void showExistingAccountListDialog() {
+     * 
+     * AlertDialog.Builder builder = new AlertDialog.Builder(this);
+     * builder.setTitle(R.string.account_select_type);
+     * 
+     * 
+     * 
+     * builder.setItems(mAccountList, new DialogInterface.OnClickListener() {
+     * public void onClick(DialogInterface dialog, int pos) {
+     * 
+     * if (pos == 0) //xmpp { //otherwise support the actual plugin-type
+     * showSetupAccountForm(helper.getProviderNames().get(0),null, null,
+     * false,helper.getProviderNames().get(0),false); } else if (pos ==
+     * mAccountList.length-2) //create account { String username = ""; String
+     * passwordPlaceholder = "password";//zeroconf doesn't need a password
+     * showSetupAccountForm
+     * (helper.getProviderNames().get(1),username,passwordPlaceholder,
+     * false,helper.getProviderNames().get(1),true); } else if (pos ==
+     * mAccountList.length-3) //create account {
+     * showSetupAccountForm(helper.getProviderNames().get(0), null, null, true,
+     * null,false); } else if (pos == mAccountList.length-1) //create account {
+     * createBurnerAccount(); } else {
+     * addGoogleAccount(mGoogleAccounts[pos-1].name); } } }); AlertDialog dialog
+     * = builder.create(); dialog.show();
+     *
+     * }
+     */
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.account_select_type);
-
-
-
-        builder.setItems(mAccountList, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int pos) {
-
-                if (pos == 0) //xmpp
-                {
-                    //otherwise support the actual plugin-type
-                    showSetupAccountForm(helper.getProviderNames().get(0),null, null, false,helper.getProviderNames().get(0),false);
-                }
-                else if (pos == mAccountList.length-2) //create account
-                {
-                    String username = "";
-                    String passwordPlaceholder = "password";//zeroconf doesn't need a password
-                    showSetupAccountForm(helper.getProviderNames().get(1),username,passwordPlaceholder, false,helper.getProviderNames().get(1),true);
-                }
-                else if (pos == mAccountList.length-3) //create account
-                {
-                    showSetupAccountForm(helper.getProviderNames().get(0), null, null, true, null,false);
-                }
-                else if (pos == mAccountList.length-1) //create account
-                {
-                    createBurnerAccount();
-                }
-                else
-                {
-                    addGoogleAccount(mGoogleAccounts[pos-1].name);
-                }
-            }
-        });
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-    }
-    */
-
-    private Handler mHandlerGoogleAuth = new Handler ()
-    {
+    private Handler mHandlerGoogleAuth = new Handler() {
 
         @Override
         public void handleMessage(Message msg) {
 
             super.handleMessage(msg);
 
-           // Log.d(TAG,"Got handler callback from auth: " + msg.what);
+            // Log.d(TAG,"Got handler callback from auth: " + msg.what);
         }
 
     };
 
-    private void addGoogleAccount ()
-    {
-       // mNewUser = newUser;
-        AlertDialog.Builder builderSingle = new AlertDialog.Builder(
-                this);
-      //  builderSingle.setTitle("Select One Name:-");
-        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
-                this,
+    private void addGoogleAccount() {
+        // mNewUser = newUser;
+        AlertDialog.Builder builderSingle = new AlertDialog.Builder(this);
+        //  builderSingle.setTitle("Select One Name:-");
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this,
                 android.R.layout.select_dialog_singlechoice);
 
         for (Account gAccount : mGoogleAccounts)
             arrayAdapter.add(gAccount.name);
 
-        builderSingle.setNegativeButton(R.string.cancel,
-                new DialogInterface.OnClickListener() {
+        builderSingle.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
 
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        builderSingle.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                mNewUser = arrayAdapter.getItem(which);
+
+                Thread thread = new Thread() {
+                    public void run() {
+                        //get the oauth token
+
+                        //don't store anything just make sure it works!
+                        String password = GTalkOAuth2.NAME
+                                          + ':'
+                                          + GTalkOAuth2.getGoogleAuthTokenAllow(mNewUser,
+                                                  getApplicationContext(),
+                                                  AccountWizardActivity.this, mHandlerGoogleAuth);
+
+                        //use the XMPP type plugin for google accounts, and the .NAME "X-GOOGLE-TOKEN" as the password
+                        showSetupAccountForm(helper.getProviderNames().get(0), mNewUser, password,
+                                false, getString(R.string.google_account), false);
                     }
-                });
+                };
+                thread.start();
 
-        builderSingle.setAdapter(arrayAdapter,
-                new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        mNewUser = arrayAdapter.getItem(which);
-
-                        Thread thread = new Thread ()
-                        {
-                            public void run ()
-                            {
-                                //get the oauth token
-
-                              //don't store anything just make sure it works!
-                               String password = GTalkOAuth2.NAME + ':' + GTalkOAuth2.getGoogleAuthTokenAllow(mNewUser, getApplicationContext(), AccountWizardActivity.this,mHandlerGoogleAuth);
-
-                               //use the XMPP type plugin for google accounts, and the .NAME "X-GOOGLE-TOKEN" as the password
-                                showSetupAccountForm(helper.getProviderNames().get(0), mNewUser,password, false, getString(R.string.google_account),false);
-                            }
-                        };
-                        thread.start();
-
-                    }
-                });
+            }
+        });
         builderSingle.show();
-
-
 
     }
 
-
-    public void showSetupAccountForm (String providerType, String username, String token, boolean createAccount, String formTitle, boolean hideTor)
-    {
+    public void showSetupAccountForm(String providerType, String username, String token,
+            boolean createAccount, String formTitle, boolean hideTor) {
         long providerId = helper.createAdditionalProvider(providerType);//xmpp
         mApp.resetProviderSettings(); //clear cached provider list
 
@@ -437,27 +419,23 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
 
         intent.putExtra("register", createAccount);
 
-        startActivityForResult(intent,REQUEST_CREATE_ACCOUNT);
+        startActivityForResult(intent, REQUEST_CREATE_ACCOUNT);
     }
 
-    public void createBurnerAccount ()
-    {
+    public void createBurnerAccount() {
 
         OrbotHelper oh = new OrbotHelper(this);
-        if (!oh.isOrbotInstalled())
-        {
+        if (!oh.isOrbotInstalled()) {
             oh.promptToInstall(this);
             return;
-        }
-        else if (!oh.isOrbotRunning())
-        {
+        } else if (!oh.isOrbotRunning()) {
             oh.requestOrbotStart(this);
             return;
         }
 
         //need to generate proper IMA url for account setup
-        String regUser = java.util.UUID.randomUUID().toString().substring(0,10).replace('-','a');
-        String regPass =  UUID.randomUUID().toString().substring(0,16);
+        String regUser = java.util.UUID.randomUUID().toString().substring(0, 10).replace('-', 'a');
+        String regPass = UUID.randomUUID().toString().substring(0, 16);
         String regDomain = "jabber.calyxinstitute.org";
         Uri uriAccountData = Uri.parse("ima://" + regUser + ':' + regPass + '@' + regDomain);
 
@@ -465,13 +443,9 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
         intent.setAction(Intent.ACTION_INSERT);
         intent.setData(uriAccountData);
         intent.putExtra("useTor", true);
-        startActivityForResult(intent,REQUEST_CREATE_ACCOUNT);
-
+        startActivityForResult(intent, REQUEST_CREATE_ACCOUNT);
 
     }
-
-
-
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -522,7 +496,6 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
                     android.R.drawable.ic_menu_delete);
         }*/
     }
-
 
     @SuppressWarnings("deprecation")
     @Override
@@ -585,7 +558,7 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
         }
 
         }
-    */
+        */
 
         return false;
     }
@@ -600,7 +573,6 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
         intent.addCategory(getProviderCategory(mProviderCursor));
         return intent;
     }*/
-
 
     /*
     Intent getViewChatsIntent() {
@@ -619,7 +591,6 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
         Log.d(TAG, "[LandingPage]" + msg);
     }
 
-
     private final class MyHandler extends SimpleAlertHandler {
 
         public MyHandler(Activity activity) {
@@ -635,45 +606,41 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
         }
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == IntentIntegrator.REQUEST_CODE)
-        {
+        if (requestCode == IntentIntegrator.REQUEST_CODE) {
 
-          Object keyMan = null;
-          boolean keyStoreImported = false;
+            Object keyMan = null;
+            boolean keyStoreImported = false;
 
             try {
-
-                keyStoreImported = OtrAndroidKeyManagerImpl.handleKeyScanResult(requestCode, resultCode, data, this);
+                keyStoreImported = OtrAndroidKeyManagerImpl.handleKeyScanResult(requestCode,
+                        resultCode, data, this);
 
             } catch (Exception e) {
-                OtrDebugLogger.log("error importing keystore",e);
+                OtrDebugLogger.log("error importing keystore", e);
             }
 
-            if (keyStoreImported)
-            {
-                Toast.makeText(this, R.string.successfully_imported_otr_keyring, Toast.LENGTH_SHORT).show();
-            }
-            else
-            {
-                Toast.makeText(this, R.string.otr_keyring_not_imported_please_check_the_file_exists_in_the_proper_format_and_location, Toast.LENGTH_SHORT).show();
+            if (keyStoreImported) {
+                Toast.makeText(this, R.string.successfully_imported_otr_keyring, Toast.LENGTH_SHORT)
+                        .show();
+            } else {
+                Toast.makeText(
+                        this,
+                        R.string.otr_keyring_not_imported_please_check_the_file_exists_in_the_proper_format_and_location,
+                        Toast.LENGTH_SHORT).show();
 
             }
 
-        }
-        else if (requestCode == REQUEST_CREATE_ACCOUNT)
-        {
-           // if (resultCode == RESULT_OK)
-           // {
-                gotoChats();
-           // }
+        } else if (requestCode == REQUEST_CREATE_ACCOUNT) {
+            // if (resultCode == RESULT_OK)
+            // {
+            gotoChats();
+            // }
         }
     }
-
 
     public void onDBLocked() {
 
@@ -697,13 +664,13 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            ViewGroup rootView = (ViewGroup) inflater.inflate(
-                    R.layout.account_wizard_slider, container, false);
+            ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.account_wizard_slider,
+                    container, false);
 
-            mAccountInfo = (TextView)rootView.findViewById(R.id.lblAccountTypeInfo);
-            mAccountDetail = (TextView)rootView.findViewById(R.id.lblAccountTypeDetail);
+            mAccountInfo = (TextView) rootView.findViewById(R.id.lblAccountTypeInfo);
+            mAccountDetail = (TextView) rootView.findViewById(R.id.lblAccountTypeDetail);
 
-            mButtonAddAccount = (Button)rootView.findViewById(R.id.btnAddAccount);
+            mButtonAddAccount = (Button) rootView.findViewById(R.id.btnAddAccount);
 
             if (mButtonText != null)
                 mButtonAddAccount.setText(mButtonText);
@@ -715,22 +682,21 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
             return rootView;
         }
 
-        public void setAccountInfo (String accountInfoText, String accountDetailText, String mButtonText)
-        {
+        public void setAccountInfo(String accountInfoText, String accountDetailText,
+                String mButtonText) {
             mAccountInfoText = accountInfoText;
             mAccountDetailText = accountDetailText;
         }
 
-        public void setOnClickListener(OnClickListener ocl)
-        {
+        public void setOnClickListener(OnClickListener ocl) {
             mOcl = ocl;
         }
 
     }
 
     /**
-     * A simple pager adapter that represents 5 ScreenSlidePageFragment objects, in
-     * sequence.
+     * A simple pager adapter that represents 5 ScreenSlidePageFragment objects,
+     * in sequence.
      */
     private class WizardPagerAdapter extends FragmentStatePagerAdapter {
         public WizardPagerAdapter(FragmentManager fm) {
@@ -740,35 +706,40 @@ public class AccountWizardActivity extends ActionBarActivity implements View.OnC
         @Override
         public Fragment getItem(final int pos) {
             WizardPageFragment wpf = new WizardPageFragment();
-            wpf.setAccountInfo(mAccountList[pos][0],mAccountList[pos][1],null);
-            wpf.setOnClickListener(new OnClickListener()
-            {
+            wpf.setAccountInfo(mAccountList[pos][0], mAccountList[pos][1], null);
+            wpf.setOnClickListener(new OnClickListener() {
 
                 @Override
                 public void onClick(View v) {
-
-                    if (pos == mAccountList.length-4) //xmpp
-                    {
-                        //otherwise support the actual plugin-type
-                        showSetupAccountForm(helper.getProviderNames().get(0),null, null, false,helper.getProviderNames().get(0),false);
-                    }
-                    else if (pos == mAccountList.length-2) //create account
-                    {
-                        String username = "";
-                        String passwordPlaceholder = "password";//zeroconf doesn't need a password
-                        showSetupAccountForm(helper.getProviderNames().get(1),username,passwordPlaceholder, false,helper.getProviderNames().get(1),true);
-                    }
-                    else if (pos == mAccountList.length-3) //create account
-                    {
-                        showSetupAccountForm(helper.getProviderNames().get(0), null, null, true, null,false);
-                    }
-                    else if (pos == mAccountList.length-1) //create account
-                    {
-                        createBurnerAccount();
-                    }
-                    else
-                    {
-                        addGoogleAccount();
+                    Log.i(TAG, "pos=" + pos + " mAccountList.length=" + mAccountList.length
+                               + " helper.getProviderNames().get(0) "
+                               + helper.getProviderNames().get(0));
+                    if (ImApp.ONLY_CUBE7) {
+                        showSetupAccountForm(helper.getProviderNames().get(0), null, null, false,
+                                helper.getProviderNames().get(0), false);
+                    } else {
+                        if (pos == mAccountList.length - 4) //xmpp
+                        {
+                            //otherwise support the actual plugin-type
+                            showSetupAccountForm(helper.getProviderNames().get(0), null, null,
+                                    false, helper.getProviderNames().get(0), false);
+                        } else if (pos == mAccountList.length - 3) //create account
+                        {
+                            showSetupAccountForm(helper.getProviderNames().get(0), null, null,
+                                    true, null, false);
+                        } else if (pos == mAccountList.length - 2) //create account
+                        {
+                            String username = "";
+                            String passwordPlaceholder = "password";//zeroconf doesn't need a password
+                            showSetupAccountForm(helper.getProviderNames().get(1), username,
+                                    passwordPlaceholder, false, helper.getProviderNames().get(1),
+                                    true);
+                        } else if (pos == mAccountList.length - 1) //create account
+                        {
+                            createBurnerAccount();
+                        } else {
+                            addGoogleAccount();
+                        }
                     }
                 }
 

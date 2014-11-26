@@ -670,6 +670,11 @@
 			<item>:-D</item>
 			<item>o_O</item>
 		</string-array>
+		
+			<string name="i_have_an_existing_cube7_account">Existing Cube7 Account</string>
+			<string name="cube7_account_existing_full">Connect to my existing Cube7 account on Bonofa Messenger7.</string>
+			
+		
 			<string name="i_have_an_existing_xmpp_account">Existing Account</string>
 			<string name="account_existing_full">Connect to my existing account on a specific Jabber / XMPP server.</string>
 			

@@ -58,7 +58,6 @@ public class ImPluginHelper {
             sInstance = new ImPluginHelper(context);
 
         }
-
         return sInstance;
     }
 
