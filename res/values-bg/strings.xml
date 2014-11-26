@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <!--General: Names-->
-  <string name="app_name">ChatSecure</string>
-  <string name="im_label">ChatSecure</string>
+  <string name="app_name">Messenger7</string>
+  <string name="im_label">Messenger7</string>
   <!--General: Permissions-->
   <string name="ro_perm_label">прочети съобщенията</string>
   <string name="ro_perm_desc">

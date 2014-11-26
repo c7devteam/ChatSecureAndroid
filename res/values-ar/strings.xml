@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <!--General: Names-->
-  <string name="app_name">شات سيكيور </string>
-  <string name="im_label">شات سيكيور ChatSecure</string>
+  <string name="app_name">Messenger7</string>
+  <string name="im_label">Messenger7</string>
   <!--General: Permissions-->
   <string name="ro_perm_label">قراءة الرسائل الفورية</string>
   <string name="ro_perm_desc">يسمح للتطبيقات بقراءة البيانات من مزود محتوى الرسائل الفورية.</string>
