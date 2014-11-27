@@ -22,5 +22,8 @@
         <item>rkquery.de</item>
         <item>bam.yt</item>
     </string-array>
-
+    <string-array name="account_domains_cube7">
+        <item>bonofa.com</item>
+        <item>c7dev.sevendevs.de</item>
+    </string-array>
 </resources>

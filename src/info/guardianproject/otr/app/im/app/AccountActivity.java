@@ -34,6 +34,7 @@ import info.guardianproject.util.XmppUriHelper;
 
 import java.util.HashMap;
 
+import android.R.integer;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -103,6 +104,7 @@ public class AccountActivity extends ActionBarActivity {
 
     Uri mAccountUri;
     EditText mEditUserAccount;
+    EditText mEditUserCube7Account;
     EditText mEditPass;
     EditText mEditPassConfirm;
     CheckBox mRememberPass;
@@ -207,7 +209,6 @@ public class AccountActivity extends ActionBarActivity {
                 cursor.close();
                 finish();
                 return;
-
             } else {
                 mProviderId = helper.createAdditionalProvider(helper.getProviderNames().get(0)); //xmpp FIXME
                 accountId = ImApp.insertOrUpdateAccount(cr, mProviderId, mUserName, pass);
@@ -314,6 +315,14 @@ public class AccountActivity extends ActionBarActivity {
             }
         });
 
+        mEditUserCube7Account = (EditText) findViewById(R.id.edtCube7Name);
+        mEditUserCube7Account.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                checkUserChanged();
+            }
+        });
+
         mEditPass = (EditText) findViewById(R.id.edtPass);
 
         mEditPassConfirm = (EditText) findViewById(R.id.edtPassConfirm);
@@ -324,9 +333,11 @@ public class AccountActivity extends ActionBarActivity {
             mSpinnerDomains.setVisibility(View.VISIBLE);
             mEditUserAccount.setHint(R.string.account_setup_new_username);
 
+            int domainRes = ImApp.CUBE7_ONLY ? R.array.account_domains_cube7
+                                            : R.array.account_domains;
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                     android.R.layout.simple_dropdown_item_1line, getResources().getStringArray(
-                            R.array.account_domains));
+                            domainRes));
             mSpinnerDomains.setAdapter(adapter);
 
         }
@@ -349,7 +360,19 @@ public class AccountActivity extends ActionBarActivity {
             }
         });
 
+        if (ImApp.CUBE7_ONLY) {
+            //            mEditUserAccount.setText("bonofa1@c7dev.sevendevs.de");
+            //mEditPass.setText("defaultpw");
+            mUseTor.setVisibility(View.GONE);
+            //mBtnAdvanced.setVisibility(View.GONE);
+            //mEditUserAccount.setVisibility(View.GONE);
+            mEditUserCube7Account.setVisibility(View.VISIBLE);
+            //mEditUserCube7Account.setText("bonofa1@bonofa.com");
+
+        }
     }
+
+    BrandingResources brandingRes;
 
     private void setupUIPost() {
         Intent i = getIntent();
@@ -359,9 +382,9 @@ public class AccountActivity extends ActionBarActivity {
             mBtnSignIn.setBackgroundResource(R.drawable.btn_red);
         }
 
-        final BrandingResources brandingRes = mApp.getBrandingResource(mProviderId);
-
+        brandingRes = mApp.getBrandingResource(mProviderId);
         mEditUserAccount.addTextChangedListener(mTextWatcher);
+        mEditUserCube7Account.addTextChangedListener(mTextWatcher);
         mEditPass.addTextChangedListener(mTextWatcher);
 
         mBtnAdvanced.setOnClickListener(new OnClickListener() {
@@ -386,96 +409,11 @@ public class AccountActivity extends ActionBarActivity {
         mBtnSignIn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                checkUserChanged();
-
-                if (mUseTor.isChecked()) {
-                    OrbotHelper oh = new OrbotHelper(AccountActivity.this);
-                    if (!oh.isOrbotRunning()) {
-                        oh.requestOrbotStart(AccountActivity.this);
-                        return;
-                    }
-                }
-
-                final String pass = mEditPass.getText().toString();
-                final String passConf = mEditPassConfirm.getText().toString();
-                final boolean rememberPass = mRememberPass.isChecked();
-                final boolean isActive = false; // TODO(miron) does this ever need to be true?
-                ContentResolver cr = getContentResolver();
-                final boolean useTor = mUseTor.isChecked();
-
-                if (mIsNewAccount) {
-                    mDomain = mSpinnerDomains.getText().toString();
-                    String fullUser = mEditUserAccount.getText().toString();
-
-                    if (fullUser.indexOf("@") == -1)
-                        fullUser += '@' + mDomain;
-
-                    if (!parseAccount(fullUser)) {
-                        mEditUserAccount.selectAll();
-                        mEditUserAccount.requestFocus();
-                        return;
-                    }
-
-                    ImPluginHelper helper = ImPluginHelper.getInstance(AccountActivity.this);
-                    mProviderId = helper.createAdditionalProvider(helper.getProviderNames().get(0)); //xmpp FIXME
-
+                if (ImApp.CUBE7_ONLY) {
+                    signInCube7();
                 } else {
-                    if (!parseAccount(mEditUserAccount.getText().toString())) {
-                        mEditUserAccount.selectAll();
-                        mEditUserAccount.requestFocus();
-                        return;
-                    } else {
-                        settingsForDomain(mDomain, mPort);//apply final settings
-                    }
+                    signInXMPP();
                 }
-
-                mAccountId = ImApp.insertOrUpdateAccount(cr, mProviderId, mUserName,
-                        rememberPass ? pass : null);
-
-                mAccountUri = ContentUris.withAppendedId(Imps.Account.CONTENT_URI, mAccountId);
-
-                //if remember pass is true, set the "keep signed in" property to true
-                if (mIsNewAccount) {
-                    if (pass.equals(passConf)) {
-                        setAccountKeepSignedIn(rememberPass);
-
-                        createNewAccount(mUserName, pass, mAccountId, useTor);
-
-                    } else {
-                        Toast.makeText(AccountActivity.this,
-                                getString(R.string.error_account_password_mismatch),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    if (isSignedIn) {
-                        signOut();
-                        isSignedIn = false;
-                    } else {
-                        setAccountKeepSignedIn(rememberPass);
-
-                        if (!mOriginalUserAccount.equals(mUserName + '@' + mDomain)
-                            && shouldShowTermOfUse(brandingRes)) {
-                            confirmTermsOfUse(brandingRes, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    mSignInHelper.signIn(pass, mProviderId, mAccountId, isActive);
-                                }
-                            });
-                        } else {
-
-                            boolean hasKey = checkForKey(mUserName + '@' + mDomain);
-
-                            mSignInHelper.signIn(pass, mProviderId, mAccountId, isActive);
-                        }
-
-                        isSignedIn = true;
-                        setResult(RESULT_OK);
-                        finish();
-                    }
-                    updateWidgetState();
-                }
-
             }
         });
 
@@ -511,6 +449,116 @@ public class AccountActivity extends ActionBarActivity {
 
         if (i.getBooleanExtra("hideTor", false)) {
             mUseTor.setVisibility(View.GONE);
+        }
+
+    }
+
+    private void signInCube7() {
+        String cube7Account = mEditUserCube7Account.getText().toString();
+        String password = mEditPass.getText().toString();
+        
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                return null;
+            }
+
+            protected void onPostExecute(Void result) {
+                signInXMPP();
+            };
+
+        }.execute();
+    }
+
+    private void signInXMPP() {
+
+        checkUserChanged();
+
+        if (mUseTor.isChecked()) {
+            OrbotHelper oh = new OrbotHelper(AccountActivity.this);
+            if (!oh.isOrbotRunning()) {
+                oh.requestOrbotStart(AccountActivity.this);
+                return;
+            }
+        }
+
+        final String pass = mEditPass.getText().toString();
+        final String passConf = mEditPassConfirm.getText().toString();
+        final boolean rememberPass = mRememberPass.isChecked();
+        final boolean isActive = false; // TODO(miron) does this ever need to be true?
+        ContentResolver cr = getContentResolver();
+        final boolean useTor = mUseTor.isChecked();
+
+        if (mIsNewAccount) {
+            mDomain = mSpinnerDomains.getText().toString();
+            String fullUser = mEditUserAccount.getText().toString();
+
+            if (fullUser.indexOf("@") == -1)
+                fullUser += '@' + mDomain;
+
+            if (!parseAccount(fullUser)) {
+                mEditUserAccount.selectAll();
+                mEditUserAccount.requestFocus();
+                return;
+            }
+
+            ImPluginHelper helper = ImPluginHelper.getInstance(AccountActivity.this);
+            mProviderId = helper.createAdditionalProvider(helper.getProviderNames().get(0)); //xmpp FIXME
+
+        } else {
+            if (!parseAccount(mEditUserAccount.getText().toString())) {
+                mEditUserAccount.selectAll();
+                mEditUserAccount.requestFocus();
+                return;
+            } else {
+                settingsForDomain(mDomain, mPort);//apply final settings
+            }
+        }
+
+        mAccountId = ImApp.insertOrUpdateAccount(cr, mProviderId, mUserName, rememberPass ? pass
+                                                                                         : null);
+
+        mAccountUri = ContentUris.withAppendedId(Imps.Account.CONTENT_URI, mAccountId);
+
+        //if remember pass is true, set the "keep signed in" property to true
+        if (mIsNewAccount) {
+            if (pass.equals(passConf)) {
+                setAccountKeepSignedIn(rememberPass);
+
+                createNewAccount(mUserName, pass, mAccountId, useTor);
+
+            } else {
+                Toast.makeText(AccountActivity.this,
+                        getString(R.string.error_account_password_mismatch), Toast.LENGTH_SHORT)
+                        .show();
+            }
+        } else {
+            if (isSignedIn) {
+                signOut();
+                isSignedIn = false;
+            } else {
+                setAccountKeepSignedIn(rememberPass);
+
+                if (!mOriginalUserAccount.equals(mUserName + '@' + mDomain)
+                    && shouldShowTermOfUse(brandingRes)) {
+                    confirmTermsOfUse(brandingRes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            mSignInHelper.signIn(pass, mProviderId, mAccountId, isActive);
+                        }
+                    });
+                } else {
+
+                    boolean hasKey = checkForKey(mUserName + '@' + mDomain);
+
+                    mSignInHelper.signIn(pass, mProviderId, mAccountId, isActive);
+                }
+
+                isSignedIn = true;
+                setResult(RESULT_OK);
+                finish();
+            }
+            updateWidgetState();
         }
 
     }
@@ -907,25 +955,47 @@ public class AccountActivity extends ActionBarActivity {
     }
 
     void updateWidgetState() {
+
         boolean goodUsername = mEditUserAccount.getText().length() > 0;
+        boolean goodC7Username = mEditUserCube7Account.getText().length() > 0;
         boolean goodPassword = mEditPass.getText().length() > 0;
         boolean hasNameAndPassword = goodUsername && goodPassword;
+        boolean hasC7NameAndPassword = goodC7Username && goodPassword;
 
-        mEditPass.setEnabled(goodUsername);
-        mEditPass.setFocusable(goodUsername);
-        mEditPass.setFocusableInTouchMode(goodUsername);
+        Log.i(TAG, "updateWidgetState goodUsername=" + goodUsername + " goodC7Username="
+                   + goodC7Username + " goodPassword=" + goodPassword);
 
-        mRememberPass.setEnabled(hasNameAndPassword);
-        mRememberPass.setFocusable(hasNameAndPassword);
+        if (ImApp.CUBE7_ONLY) {
+            mEditPass.setEnabled(goodC7Username);
+            mEditPass.setFocusable(goodC7Username);
+            mEditPass.setFocusableInTouchMode(goodC7Username);
 
-        mEditUserAccount.setEnabled(!isSignedIn);
-        mEditPass.setEnabled(!isSignedIn);
+            mRememberPass.setEnabled(hasC7NameAndPassword);
+            mRememberPass.setFocusable(hasC7NameAndPassword);
 
-        if (!isSignedIn) {
-            mBtnSignIn.setEnabled(hasNameAndPassword);
-            mBtnSignIn.setFocusable(hasNameAndPassword);
+            mEditUserAccount.setEnabled(!isSignedIn);
+            mEditPass.setEnabled(!isSignedIn);
+
+            if (!isSignedIn) {
+                mBtnSignIn.setEnabled(hasC7NameAndPassword);
+                mBtnSignIn.setFocusable(hasC7NameAndPassword);
+            }
+
         } else {
+            mEditPass.setEnabled(goodUsername);
+            mEditPass.setFocusable(goodUsername);
+            mEditPass.setFocusableInTouchMode(goodUsername);
 
+            mRememberPass.setEnabled(hasNameAndPassword);
+            mRememberPass.setFocusable(hasNameAndPassword);
+
+            mEditUserAccount.setEnabled(!isSignedIn);
+            mEditPass.setEnabled(!isSignedIn);
+
+            if (!isSignedIn) {
+                mBtnSignIn.setEnabled(hasNameAndPassword);
+                mBtnSignIn.setFocusable(hasNameAndPassword);
+            }
         }
     }
 

@@ -269,21 +269,37 @@ public class AccountWizardActivity extends ActionBarActivity implements
     Account[] mGoogleAccounts;
 
     private void buildAccountList() {
+        mGoogleAccounts = AccountManager.get(this).getAccountsByType(GTalkOAuth2.TYPE_GOOGLE_ACCT);
+        
         /**
          * Allow only Cube7 Account
          */
-        if (ImApp.ONLY_CUBE7) {
-            mAccountList = new String[1][2];
+        if (ImApp.CUBE7_ONLY) {
+            mAccountList = new String[6][2];
             mAccountList[0][0] = getString(R.string.i_have_an_existing_cube7_account);
-            mAccountList[0][0] = getString(R.string.cube7_account_existing_full); 
+            mAccountList[0][1] = getString(R.string.provider_full_name_cube7);
+            
+            mAccountList[1][0] = getString(R.string.i_want_to_chat_using_my_google_account);
+            mAccountList[1][1] = getString(R.string.account_google_full);
+
+            mAccountList[2][0] = getString(R.string.i_have_an_existing_xmpp_account);
+            mAccountList[2][1] = getString(R.string.account_existing_full);
+
+            mAccountList[3][0] = getString(R.string.i_need_a_new_account);
+            mAccountList[3][1] = getString(R.string.account_new_full);
+
+            mAccountList[4][0] = getString(R.string.i_want_to_chat_on_my_local_wifi_network_bonjour_zeroconf_);
+            mAccountList[4][1] = getString(R.string.account_wifi_full);
+
+            mAccountList[5][0] = getString(R.string.i_need_a_burner_one_time_throwaway_account_);
+            mAccountList[5][1] = getString(R.string.account_burner_full);
             return;
         }
 
         List<String> listProviders = helper.getProviderNames();
 
-        mGoogleAccounts = AccountManager.get(this).getAccountsByType(GTalkOAuth2.TYPE_GOOGLE_ACCT);
-
         mAccountList = new String[listProviders.size() + 3][2]; //potentialProviders + google + create account + burner
+        Log.i(TAG, "listProviders " + listProviders.size());
 
         int i = 0;
 
@@ -714,32 +730,49 @@ public class AccountWizardActivity extends ActionBarActivity implements
                     Log.i(TAG, "pos=" + pos + " mAccountList.length=" + mAccountList.length
                                + " helper.getProviderNames().get(0) "
                                + helper.getProviderNames().get(0));
-                    if (ImApp.ONLY_CUBE7) {
-                        showSetupAccountForm(helper.getProviderNames().get(0), null, null, false,
-                                helper.getProviderNames().get(0), false);
-                    } else {
-                        if (pos == mAccountList.length - 4) //xmpp
-                        {
-                            //otherwise support the actual plugin-type
+                    if (ImApp.CUBE7_ONLY) {
+                        if (pos == 0) {
+                            showSetupAccountForm(helper.getProviderNames().get(2), null, null,
+                                    false, helper.getProviderNames().get(2), false);
+                        } else if (pos == 1) {
+                            addGoogleAccount();
+                        } else if (pos == 2) {
                             showSetupAccountForm(helper.getProviderNames().get(0), null, null,
                                     false, helper.getProviderNames().get(0), false);
-                        } else if (pos == mAccountList.length - 3) //create account
-                        {
+                        } else if (pos == 3) {
                             showSetupAccountForm(helper.getProviderNames().get(0), null, null,
                                     true, null, false);
-                        } else if (pos == mAccountList.length - 2) //create account
-                        {
+                        } else if (pos == 4) {
                             String username = "";
                             String passwordPlaceholder = "password";//zeroconf doesn't need a password
                             showSetupAccountForm(helper.getProviderNames().get(1), username,
                                     passwordPlaceholder, false, helper.getProviderNames().get(1),
                                     true);
-                        } else if (pos == mAccountList.length - 1) //create account
-                        {
+                        } else if (pos == 5) {
                             createBurnerAccount();
-                        } else {
-                            addGoogleAccount();
                         }
+                        return;
+                    }
+                    if (pos == mAccountList.length - 4) {
+                        //xmpp
+                        //otherwise support the actual plugin-type
+                        showSetupAccountForm(helper.getProviderNames().get(0), null, null, false,
+                                helper.getProviderNames().get(0), false);
+                    } else if (pos == mAccountList.length - 3) {
+                        //create account
+                        showSetupAccountForm(helper.getProviderNames().get(0), null, null, true,
+                                null, false);
+                    } else if (pos == mAccountList.length - 2) {
+                        //create account
+                        String username = "";
+                        String passwordPlaceholder = "password";//zeroconf doesn't need a password
+                        showSetupAccountForm(helper.getProviderNames().get(1), username,
+                                passwordPlaceholder, false, helper.getProviderNames().get(1), true);
+                    } else if (pos == mAccountList.length - 1) {
+                        //create account
+                        createBurnerAccount();
+                    } else {
+                        addGoogleAccount();
                     }
                 }
 

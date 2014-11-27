@@ -90,7 +90,7 @@ import de.duenndns.ssl.MemorizingTrustManager;
 
 public class ImApp extends Application {
 
-    public static final boolean ONLY_CUBE7 = true;
+    public static final boolean CUBE7_ONLY = true;
 
     public static final String LOG_TAG = "GB.ImApp";
 

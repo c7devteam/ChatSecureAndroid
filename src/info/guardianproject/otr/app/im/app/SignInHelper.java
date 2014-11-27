@@ -33,11 +33,13 @@ import android.widget.Toast;
  *
  * @author devrandom
  *
- * <p>Users of this helper must call {@link SignInHelper#stop()} to clean up callbacks
- * in their onDestroy() or onPause() lifecycle methods.
+ *         <p>Users of this helper must call {@link SignInHelper#stop()} to
+ *         clean up callbacks in their onDestroy() or onPause() lifecycle
+ *         methods.
  *
- * <p>The helper listens to connection events.  It automatically stops listening when the
- * connection state is logged-in or disconnected (failed).
+ *         <p>The helper listens to connection events. It automatically stops
+ *         listening when the connection state is logged-in or disconnected
+ *         (failed).
  */
 public class SignInHelper {
     Activity mContext;
@@ -50,6 +52,7 @@ public class SignInHelper {
     // This can be used to be informed of signin events
     public interface SignInListener {
         void connectedToService();
+
         void stateChanged(int state, long accountId);
     }
 
@@ -60,7 +63,7 @@ public class SignInHelper {
         mSignInListener = listener;
         if (mApp == null) {
 
-            mApp = (ImApp)mContext.getApplication();
+            mApp = (ImApp) mContext.getApplication();
         }
 
         connections = new HashSet<IImConnection>();
@@ -119,7 +122,7 @@ public class SignInHelper {
             } catch (RemoteException e) {
 
                 mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-                LogCleaner.error(ImApp.LOG_TAG, "handle connection error",e);
+                LogCleaner.error(ImApp.LOG_TAG, "handle connection error", e);
             }
         }
 
@@ -131,12 +134,11 @@ public class SignInHelper {
             {
                 String providerName = provider.mName;
 
-
                 Resources r = mContext.getResources();
                 String errMsg = r.getString(R.string.login_service_failed, providerName, // FIXME
                         error == null ? "" : ErrorResUtils.getErrorRes(r, error.getCode()));
 
-               // Toast.makeText(mContext, errMsg, Toast.LENGTH_LONG).show();
+                // Toast.makeText(mContext, errMsg, Toast.LENGTH_LONG).show();
                 /*
                 new AlertDialog.Builder(mContext).setTitle(R.string.error)
                         .setMessage()
@@ -158,7 +160,7 @@ public class SignInHelper {
 
         mContext.startActivity(intent);
         // sign in successfully, finish and switch to contact list
-      //  mContext.finish();
+        //  mContext.finish();
     }
 
     public void signIn(final String password, final long providerId, final long accountId,
@@ -166,8 +168,8 @@ public class SignInHelper {
 
         final ProviderDef provider = mApp.getProvider(providerId);
 
-        if (provider != null) //provider may be null if deleted, or db not updated yet
-        {
+        if (provider != null) {
+            //provider may be null if deleted, or db not updated yet
             final String providerName = provider.mName;
 
             if (mApp.serviceConnected()) {
@@ -177,9 +179,7 @@ public class SignInHelper {
                     activateAccount(providerId, accountId);
                 }
                 signInAccount(password, providerId, providerName, accountId);
-            }
-            else
-            {
+            } else {
                 mApp.callWhenServiceConnected(mHandler, new Runnable() {
                     public void run() {
                         if (mApp.serviceConnected()) {
@@ -196,64 +196,62 @@ public class SignInHelper {
         }
     }
 
-    private void signInAccount(final String password, final long providerId, final String providerName, final long accountId) {
-
+    private void signInAccount(final String password, final long providerId,
+            final String providerName, final long accountId) {
 
         try {
             signInAccountAsync(password, providerId, providerName, accountId);
         } catch (RemoteException e) {
-            Log.d(ImApp.LOG_TAG,"error signing in",e);
+            Log.d(ImApp.LOG_TAG, "error signing in", e);
         }
-
-
 
     }
 
-    private void signInAccountAsync(String password, long providerId, String providerName, long accountId) throws RemoteException {
+    private void signInAccountAsync(String password, long providerId, String providerName,
+            long accountId) throws RemoteException {
         boolean autoLoadContacts = true;
         boolean autoRetryLogin = true;
         IImConnection conn = null;
 
+        conn = mApp.getConnection(providerId);
 
-            conn = mApp.getConnection(providerId);
+        if (conn != null) {
+            connections.add(conn);
+            conn.registerConnectionListener(mListener);
+            int state = conn.getState();
+            if (mSignInListener != null)
+                mSignInListener.stateChanged(state, accountId);
 
-            if (conn != null) {
-                connections.add(conn);
-                conn.registerConnectionListener(mListener);
-                int state = conn.getState();
-                if (mSignInListener != null)
-                    mSignInListener.stateChanged(state, accountId);
-
-                if (state != ImConnection.DISCONNECTED) {
-                    // already signed in or in the process
-                    if (state == ImConnection.LOGGED_IN) {
-                        connections.remove(conn);
-                        conn.unregisterConnectionListener(mListener);
-                    }
-                    handleConnectionEvent(conn, state, null);
-                    return;
+            if (state != ImConnection.DISCONNECTED) {
+                // already signed in or in the process
+                if (state == ImConnection.LOGGED_IN) {
+                    connections.remove(conn);
+                    conn.unregisterConnectionListener(mListener);
                 }
-
-            } else {
-                conn = mApp.createConnection(providerId, accountId);
-                if (conn == null) {
-                    // This can happen when service did not come up for any reason
-                    return;
-                }
-
-                connections.add(conn);
-                conn.registerConnectionListener(mListener);
+                handleConnectionEvent(conn, state, null);
+                return;
             }
 
-            conn.login(password, autoLoadContacts, autoRetryLogin);
-
-            /*
-            if (mApp.isNetworkAvailableAndConnected()) {
-
-            } else {
-             //   promptForBackgroundDataSetting(providerName);
+        } else {
+            conn = mApp.createConnection(providerId, accountId);
+            if (conn == null) {
+                // This can happen when service did not come up for any reason
                 return;
-            }*/
+            }
+
+            connections.add(conn);
+            conn.registerConnectionListener(mListener);
+        }
+
+        conn.login(password, autoLoadContacts, autoRetryLogin);
+
+        /*
+        if (mApp.isNetworkAvailableAndConnected()) {
+
+        } else {
+         //   promptForBackgroundDataSetting(providerName);
+            return;
+        }*/
 
     }
 
@@ -264,8 +262,8 @@ public class SignInHelper {
      */
     private void promptForBackgroundDataSetting(String providerName) {
 
-        Toast.makeText(mContext, mContext.getString(R.string.bg_data_prompt_message, providerName), Toast.LENGTH_LONG).show();
-
+        Toast.makeText(mContext, mContext.getString(R.string.bg_data_prompt_message, providerName),
+                Toast.LENGTH_LONG).show();
 
     }
 
