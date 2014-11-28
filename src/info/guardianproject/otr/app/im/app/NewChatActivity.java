@@ -250,10 +250,8 @@ public class NewChatActivity extends FragmentActivity implements View.OnCreateCo
 
                     if (mMenu != null)
                     {
-
                         mMenu.setGroupVisible(R.id.menu_group_chats, true);
                         mMenu.setGroupVisible(R.id.menu_group_contacts, false);
-
                     }
                     
                     mDrawerToggle.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);

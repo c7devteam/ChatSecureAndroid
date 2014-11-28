@@ -65,6 +65,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.integration.android.IntentIntegrator;
+import com.viewpagerindicator.CirclePageIndicator;
 import com.viewpagerindicator.PageIndicator;
 
 public class AccountWizardActivity extends ActionBarActivity implements
@@ -77,7 +78,7 @@ public class AccountWizardActivity extends ActionBarActivity implements
     private SimpleAlertHandler mHandler;
 
     private SignInHelper mSignInHelper;
-
+    private CirclePageIndicator mTitleIndicator;
     private static final int REQUEST_CREATE_ACCOUNT = RESULT_FIRST_USER + 2;
 
     /**
@@ -123,8 +124,9 @@ public class AccountWizardActivity extends ActionBarActivity implements
         mPagerAdapter = new WizardPagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
 
-        PageIndicator titleIndicator = (PageIndicator) findViewById(R.id.indicator);
-        titleIndicator.setViewPager(mPager);
+        mTitleIndicator = (CirclePageIndicator) findViewById(R.id.indicator);
+        mTitleIndicator.setViewPager(mPager);
+        mTitleIndicator.setVisibility(ImApp.CUBE7_ONLY ? View.GONE : View.VISIBLE);
 
     }
 
@@ -270,15 +272,15 @@ public class AccountWizardActivity extends ActionBarActivity implements
 
     private void buildAccountList() {
         mGoogleAccounts = AccountManager.get(this).getAccountsByType(GTalkOAuth2.TYPE_GOOGLE_ACCT);
-        
+
         /**
          * Allow only Cube7 Account
          */
         if (ImApp.CUBE7_ONLY) {
-            mAccountList = new String[6][2];
+            mAccountList = new String[1][2];
             mAccountList[0][0] = getString(R.string.i_have_an_existing_cube7_account);
             mAccountList[0][1] = getString(R.string.provider_full_name_cube7);
-            
+            /*
             mAccountList[1][0] = getString(R.string.i_want_to_chat_using_my_google_account);
             mAccountList[1][1] = getString(R.string.account_google_full);
 
@@ -293,12 +295,13 @@ public class AccountWizardActivity extends ActionBarActivity implements
 
             mAccountList[5][0] = getString(R.string.i_need_a_burner_one_time_throwaway_account_);
             mAccountList[5][1] = getString(R.string.account_burner_full);
+            */
             return;
         }
 
         List<String> listProviders = helper.getProviderNames();
 
-        mAccountList = new String[listProviders.size() + 3][2]; //potentialProviders + google + create account + burner
+        mAccountList = new String[listProviders.size() + 3 - 1][2]; //potentialProviders + google + create account + burner
         Log.i(TAG, "listProviders " + listProviders.size());
 
         int i = 0;
@@ -317,7 +320,6 @@ public class AccountWizardActivity extends ActionBarActivity implements
 
         mAccountList[i][0] = getString(R.string.i_need_a_burner_one_time_throwaway_account_);
         mAccountList[i++][1] = getString(R.string.account_burner_full);
-
     }
 
     /* CHANGE phoenix_nz - add "Create Account" to List */
@@ -752,27 +754,29 @@ public class AccountWizardActivity extends ActionBarActivity implements
                             createBurnerAccount();
                         }
                         return;
-                    }
-                    if (pos == mAccountList.length - 4) {
-                        //xmpp
-                        //otherwise support the actual plugin-type
-                        showSetupAccountForm(helper.getProviderNames().get(0), null, null, false,
-                                helper.getProviderNames().get(0), false);
-                    } else if (pos == mAccountList.length - 3) {
-                        //create account
-                        showSetupAccountForm(helper.getProviderNames().get(0), null, null, true,
-                                null, false);
-                    } else if (pos == mAccountList.length - 2) {
-                        //create account
-                        String username = "";
-                        String passwordPlaceholder = "password";//zeroconf doesn't need a password
-                        showSetupAccountForm(helper.getProviderNames().get(1), username,
-                                passwordPlaceholder, false, helper.getProviderNames().get(1), true);
-                    } else if (pos == mAccountList.length - 1) {
-                        //create account
-                        createBurnerAccount();
                     } else {
-                        addGoogleAccount();
+                        if (pos == 0) {
+                            addGoogleAccount();
+                        } else if (pos == 1) {
+                            //xmpp
+                            //otherwise support the actual plugin-type
+                            showSetupAccountForm(helper.getProviderNames().get(0), null, null,
+                                    false, helper.getProviderNames().get(0), false);
+                        } else if (pos == 2) {
+                            //create account
+                            showSetupAccountForm(helper.getProviderNames().get(0), null, null,
+                                    true, null, false);
+                        } else if (pos == 3) {
+                            //create account
+                            String username = "";
+                            String passwordPlaceholder = "password";//zeroconf doesn't need a password
+                            showSetupAccountForm(helper.getProviderNames().get(1), username,
+                                    passwordPlaceholder, false, helper.getProviderNames().get(1),
+                                    true);
+                        } else if (pos == 4) {
+                            //create account
+                            createBurnerAccount();
+                        }
                     }
                 }
 

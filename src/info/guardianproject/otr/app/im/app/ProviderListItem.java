@@ -1,13 +1,13 @@
 /*
  * Copyright (C) 2009 Myriad Group AG Copyright (C) 2009 The Android Open Source
  * Project
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -41,7 +41,7 @@ public class ProviderListItem extends LinearLayout {
     private Activity mActivity;
     //private SignInManager mSignInManager;
     private ContentResolver mResolver;
-  //  private CompoundButton mSignInSwitch;
+    //  private CompoundButton mSignInSwitch;
 
     //private boolean mUserChanged = false;
     private boolean mIsSignedIn;
@@ -60,8 +60,7 @@ public class ProviderListItem extends LinearLayout {
     private boolean mShowLongName = false;
     private ImApp mApp = null;
 
-    private static Handler mHandler = new Handler()
-    {
+    private static Handler mHandler = new Handler() {
 
         @Override
         public void handleMessage(Message msg) {
@@ -77,14 +76,13 @@ public class ProviderListItem extends LinearLayout {
         mActivity = activity;
         //mSignInManager = signInManager;
 
-        mApp = (ImApp)activity.getApplication();
+        mApp = (ImApp) activity.getApplication();
 
         mResolver = mApp.getContentResolver();
 
     }
 
     public void init(Cursor c, boolean showLongName) {
-
 
         mShowLongName = showLongName;
 
@@ -102,12 +100,10 @@ public class ProviderListItem extends LinearLayout {
         mAccountConnectionStatusColumn = c
                 .getColumnIndexOrThrow(Imps.Provider.ACCOUNT_CONNECTION_STATUS);
 
-        setOnClickListener(new OnClickListener ()
-        {
+        setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-
 
                 Intent intent = new Intent(Intent.ACTION_EDIT, ContentUris.withAppendedId(
                         Imps.Account.CONTENT_URI, mAccountId));
@@ -170,22 +166,22 @@ public class ProviderListItem extends LinearLayout {
 
 
         }
-      */
+        */
 
-/*
-        mStatusSwitch.setOnClickListener(new OnClickListener (){
+        /*
+                mStatusSwitch.setOnClickListener(new OnClickListener (){
 
-            @Override
-            public void onClick(View v) {
+                    @Override
+                    public void onClick(View v) {
 
-                if (mStatusSwitch.isChecked())
-                    mSignInManager.signIn(mAccountId);
-                else
-                    mSignInManager.signOut(mAccountId);
+                        if (mStatusSwitch.isChecked())
+                            mSignInManager.signIn(mAccountId);
+                        else
+                            mSignInManager.signOut(mAccountId);
 
-            }
+                    }
 
-        });*/
+                });*/
     }
 
     @Override
@@ -208,13 +204,11 @@ public class ProviderListItem extends LinearLayout {
             final int connectionStatus = cursor.getInt(mAccountConnectionStatusColumn);
             final String presenceString = getPresenceString(cursor, getContext());
 
-            mHandler.postDelayed(new Runnable () {
-                public void run ()
-                {
+            mHandler.postDelayed(new Runnable() {
+                public void run() {
                     runBindTask(r, providerId, activeUserName, connectionStatus, presenceString);
                 }
-            }
-                    , 200l);
+            }, 200l);
 
         }
     }
@@ -228,103 +222,92 @@ public class ProviderListItem extends LinearLayout {
     private void runBindTask(final Resources r, final int providerId, final String activeUserName,
             final int dbConnectionStatus, final String presenceString) {
 
-            String mProviderNameText;
-            String mSecondRowText;
+        String mProviderNameText;
+        String mSecondRowText;
 
-            try
-            {
-                    Cursor pCursor = mResolver.query(Imps.ProviderSettings.CONTENT_URI,new String[] {Imps.ProviderSettings.NAME, Imps.ProviderSettings.VALUE},Imps.ProviderSettings.PROVIDER + "=?",new String[] { Long.toString( providerId)},null);
+        try {
+            Cursor pCursor = mResolver.query(Imps.ProviderSettings.CONTENT_URI,
+                    new String[] { Imps.ProviderSettings.NAME, Imps.ProviderSettings.VALUE },
+                    Imps.ProviderSettings.PROVIDER + "=?",
+                    new String[] { Long.toString(providerId) }, null);
 
-                    Imps.ProviderSettings.QueryMap settings = new Imps.ProviderSettings.QueryMap(pCursor, mResolver,
-                            providerId,     false /* keep updated */, mHandler /* no handler */);
+            Imps.ProviderSettings.QueryMap settings = new Imps.ProviderSettings.QueryMap(pCursor,
+                    mResolver, providerId, false /* keep updated */, mHandler /* no handler */);
 
-                    String userDomain = settings.getDomain();
-                    int connectionStatus = dbConnectionStatus;
+            String userDomain = settings.getDomain();
+            int connectionStatus = dbConnectionStatus;
 
-                    IImConnection conn = mApp.getConnection(providerId);
-                    if (conn == null)
-                    {
-                        connectionStatus = ImConnection.DISCONNECTED;
-                    }
-                    else
-                    {
-                        try {
-                            connectionStatus = conn.getState();
-                        } catch (RemoteException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                    }
-
-                    if (mShowLongName)
-                        mProviderNameText = activeUserName + '@' + userDomain;
-                    else
-                        mProviderNameText = activeUserName;
-
-                    switch (connectionStatus) {
-
-                    case ImConnection.LOGGING_IN:
-                        mSecondRowText = r.getString(R.string.signing_in_wait);
-                        mIsSignedIn = true;
-
-                        break;
-
-                    case ImConnection.SUSPENDING:
-                    case ImConnection.SUSPENDED:
-                        mSecondRowText = r.getString(R.string.error_suspended_connection);
-                        mIsSignedIn = true;
-
-                        break;
-
-
-
-                    case ImConnection.LOGGED_IN:
-                        mIsSignedIn = true;
-                        mSecondRowText = computeSecondRowText(presenceString, r, settings, true);
-
-                        break;
-
-                    case ImConnection.LOGGING_OUT:
-                        mIsSignedIn = false;
-                        mSecondRowText = r.getString(R.string.signing_out_wait);
-
-                        break;
-
-                    default:
-
-                        mIsSignedIn = false;
-                        mSecondRowText = computeSecondRowText(presenceString, r, settings, true);
-                        break;
-                    }
-
-                    settings.close();
-                    pCursor.close();
-
-                    applyView(mProviderNameText, mIsSignedIn, mSecondRowText);
+            IImConnection conn = mApp.getConnection(providerId);
+            if (conn == null) {
+                connectionStatus = ImConnection.DISCONNECTED;
+            } else {
+                try {
+                    connectionStatus = conn.getState();
+                } catch (RemoteException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-                catch (NullPointerException npe)
-                {
-                    Log.d(ImApp.LOG_TAG,"null on QueryMap (this shouldn't happen anymore, but just in case)",npe);
-                }
+            }
 
+            if (mShowLongName)
+                mProviderNameText = activeUserName + '@' + userDomain;
+            else
+                mProviderNameText = activeUserName;
 
+            switch (connectionStatus) {
 
+            case ImConnection.LOGGING_IN:
+                mSecondRowText = r.getString(R.string.signing_in_wait);
+                mIsSignedIn = true;
+
+                break;
+
+            case ImConnection.SUSPENDING:
+            case ImConnection.SUSPENDED:
+                mSecondRowText = r.getString(R.string.error_suspended_connection);
+                mIsSignedIn = true;
+
+                break;
+
+            case ImConnection.LOGGED_IN:
+                mIsSignedIn = true;
+                mSecondRowText = computeSecondRowText(presenceString, r, settings, true);
+
+                break;
+
+            case ImConnection.LOGGING_OUT:
+                mIsSignedIn = false;
+                mSecondRowText = r.getString(R.string.signing_out_wait);
+
+                break;
+
+            default:
+
+                mIsSignedIn = false;
+                mSecondRowText = computeSecondRowText(presenceString, r, settings, true);
+                break;
+            }
+
+            settings.close();
+            pCursor.close();
+
+            applyView(mProviderNameText, mIsSignedIn, mSecondRowText);
+        } catch (NullPointerException npe) {
+            Log.d(ImApp.LOG_TAG,
+                    "null on QueryMap (this shouldn't happen anymore, but just in case)", npe);
+        }
 
     }
 
     private void applyView(String providerNameText, boolean isSignedIn, String secondRowText) {
 
-        if (isSignedIn)
-        {
+        if (isSignedIn) {
             setBackgroundColor(getResources().getColor(R.color.holo_blue_dark));
-        }
-        else
-        {
+        } else {
             setBackgroundColor(getResources().getColor(android.R.color.transparent));
         }
 
-        if (mProviderName != null)
-        {
+        if (mProviderName != null) {
             mProviderName.setText(providerNameText);
 
             if (isSignedIn)
@@ -333,35 +316,30 @@ public class ProviderListItem extends LinearLayout {
                 mProviderName.setTextColor(Color.LTGRAY);
 
             /**
-            if (mSignInSwitch != null && (!mUserChanged))
-            {
-                mSignInSwitch.setOnCheckedChangeListener(null);
-                mSignInSwitch.setChecked(switchOn);
-                mSignInSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener(){
+             * if (mSignInSwitch != null && (!mUserChanged)) {
+             * mSignInSwitch.setOnCheckedChangeListener(null);
+             * mSignInSwitch.setChecked(switchOn);
+             * mSignInSwitch.setOnCheckedChangeListener(new
+             * OnCheckedChangeListener(){
+             * 
+             * @Override public void onCheckedChanged(CompoundButton buttonView,
+             *           boolean isChecked) {
+             * 
+             *           if (isChecked) mSignInManager.signIn(mAccountId); else
+             *           mSignInManager.signOut(mAccountId);
+             * 
+             *           mUserChanged = true; }
+             * 
+             *           }); }
+             */
 
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-                        if (isChecked)
-                            mSignInManager.signIn(mAccountId);
-                        else
-                            mSignInManager.signOut(mAccountId);
-
-                        mUserChanged = true;
-                    }
-
-                });
-            }*/
-
-            if (mLoginName != null)
-            {
+            if (mLoginName != null) {
                 mLoginName.setText(secondRowText);
 
                 if (isSignedIn)
                     mLoginName.setTextColor(Color.WHITE);
                 else
                     mLoginName.setTextColor(Color.LTGRAY);
-
 
             }
         }
@@ -373,32 +351,25 @@ public class ProviderListItem extends LinearLayout {
         String secondRowText;
         StringBuffer secondRowTextBuffer = new StringBuffer();
 
-
-        if (showPresence && presenceString.length() > 0)
-        {
+        if (showPresence && presenceString.length() > 0) {
             secondRowTextBuffer.append(presenceString);
             secondRowTextBuffer.append(" - ");
         }
 
-
-        if (settings.getServer() != null && settings.getServer().length() > 0)
-        {
-
-            secondRowTextBuffer.append(settings.getServer());
-
+        if (ImApp.CUBE7_ONLY && false) { 
+            secondRowTextBuffer.append("Cube7");
+        } else {
+            if (settings.getServer() != null && settings.getServer().length() > 0) {
+                secondRowTextBuffer.append(settings.getServer());
+            } else if (settings.getDomain() != null & settings.getDomain().length() > 0) {
+                secondRowTextBuffer.append(settings.getDomain());
+            }
         }
-        else if (settings.getDomain() != null & settings.getDomain().length() > 0)
-        {
-            secondRowTextBuffer.append(settings.getDomain());
-        }
-
 
         if (settings.getPort() != 5222 && settings.getPort() != 0)
             secondRowTextBuffer.append(':').append(settings.getPort());
 
-
-        if (settings.getUseTor())
-        {
+        if (settings.getUseTor()) {
             secondRowTextBuffer.append(" - ");
             secondRowTextBuffer.append(r.getString(R.string._via_orbot));
         }
@@ -407,17 +378,14 @@ public class ProviderListItem extends LinearLayout {
         return secondRowText;
     }
 
-    public Long getAccountID ()
-    {
+    public Long getAccountID() {
         return mAccountId;
     }
-
 
     private String getPresenceString(Cursor cursor, Context context) {
         int presenceStatus = cursor.getInt(mAccountPresenceStatusColumn);
 
         switch (presenceStatus) {
-
 
         case Imps.Presence.AVAILABLE:
             return context.getString(R.string.presence_available);
@@ -440,14 +408,10 @@ public class ProviderListItem extends LinearLayout {
         }
     }
 
-    public interface SignInManager
-    {
-        public void signIn (long accountId);
-        public void signOut (long accountId);
+    public interface SignInManager {
+        public void signIn(long accountId);
+
+        public void signOut(long accountId);
     }
 
-
-
-
 }
-

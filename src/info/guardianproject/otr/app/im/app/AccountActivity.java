@@ -74,6 +74,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bonofa.cube7api.JIDManager;
+import com.bonofa.cube7api.TokenManager;
 import com.google.zxing.integration.android.IntentIntegrator;
 
 public class AccountActivity extends ActionBarActivity {
@@ -279,6 +281,9 @@ public class AccountActivity extends ActionBarActivity {
                 mOriginalUserAccount = cursor.getString(ACCOUNT_USERNAME_COLUMN) + "@"
                                        + settings.getDomain();
                 mEditUserAccount.setText(mOriginalUserAccount);
+                if (ImApp.CUBE7_ONLY){
+                    mEditUserCube7Account.setText(JIDManager.getC7AccountByJID(AccountActivity.this, mOriginalUserAccount, cursor.getString(ACCOUNT_PASSWORD_COLUMN)));
+                }
                 mEditPass.setText(cursor.getString(ACCOUNT_PASSWORD_COLUMN));
                 mRememberPass.setChecked(!cursor.isNull(ACCOUNT_PASSWORD_COLUMN));
                 mUseTor.setChecked(settings.getUseTor());
@@ -361,14 +366,15 @@ public class AccountActivity extends ActionBarActivity {
         });
 
         if (ImApp.CUBE7_ONLY) {
-            //            mEditUserAccount.setText("bonofa1@c7dev.sevendevs.de");
-            //mEditPass.setText("defaultpw");
-            mUseTor.setVisibility(View.GONE);
-            //mBtnAdvanced.setVisibility(View.GONE);
-            //mEditUserAccount.setVisibility(View.GONE);
-            mEditUserCube7Account.setVisibility(View.VISIBLE);
-            //mEditUserCube7Account.setText("bonofa1@bonofa.com");
 
+            mUseTor.setVisibility(View.GONE);
+            mBtnAdvanced.setVisibility(View.GONE);
+            // mEditUserAccount.setVisibility(View.GONE);
+            mEditUserCube7Account.setVisibility(View.VISIBLE);
+
+            //mEditUserAccount.setText("bonofa1@c7dev.sevendevs.de");
+            mEditUserCube7Account.setText("bonofa1@bonofa.com");
+            mEditPass.setText("defaultpw");
         }
     }
 
@@ -454,19 +460,23 @@ public class AccountActivity extends ActionBarActivity {
     }
 
     private void signInCube7() {
-        String cube7Account = mEditUserCube7Account.getText().toString();
-        String password = mEditPass.getText().toString();
-        
-        new AsyncTask<Void, Void, Void>() {
+        final String cube7Email = mEditUserCube7Account.getText().toString();
+        final String password = mEditPass.getText().toString();
+
+        new AsyncTask<Void, Void, String>() {
             @Override
-            protected Void doInBackground(Void... params) {
-                return null;
+            protected String doInBackground(Void... params) {
+                return JIDManager.getJIDByC7Account(getApplicationContext(), cube7Email, password);
             }
 
-            protected void onPostExecute(Void result) {
-                signInXMPP();
+            protected void onPostExecute(String result) {
+                Log.i(TAG, "signInCube7=" + result);
+                Toast.makeText(AccountActivity.this, result, 1).show();
+                mEditUserAccount.setText(result);
+                if (result != null) {
+                    signInXMPP();
+                }
             };
-
         }.execute();
     }
 
@@ -686,7 +696,6 @@ public class AccountActivity extends ActionBarActivity {
 
             }
         }
-
     }
 
     boolean parseAccount(String userField) {
@@ -745,14 +754,10 @@ public class AccountActivity extends ActionBarActivity {
                 new String[] { Imps.ProviderSettings.NAME, Imps.ProviderSettings.VALUE },
                 Imps.ProviderSettings.PROVIDER + "=?", new String[] { Long.toString(mProviderId) },
                 null);
-
         Imps.ProviderSettings.QueryMap settings = new Imps.ProviderSettings.QueryMap(pCursor, cr,
                 mProviderId, false /* don't keep updated */, null /* no handler */);
-
         settingsForDomain(domain, port, settings);
-
         settings.close();
-
     }
 
     private void settingsForDomain(String domain, int port, Imps.ProviderSettings.QueryMap settings) {
@@ -974,6 +979,7 @@ public class AccountActivity extends ActionBarActivity {
             mRememberPass.setFocusable(hasC7NameAndPassword);
 
             mEditUserAccount.setEnabled(!isSignedIn);
+            mEditUserCube7Account.setEnabled(!isSignedIn);
             mEditPass.setEnabled(!isSignedIn);
 
             if (!isSignedIn) {
