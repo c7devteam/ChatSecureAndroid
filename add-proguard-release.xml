@@ -41,6 +41,8 @@
     -printseeds ${obfuscate.absolute.dir}/seeds.txt
     -printusage ${obfuscate.absolute.dir}/usage.txt
     -printmapping ${obfuscate.absolute.dir}/mapping.txt
+    -keep class !android.support.v7.internal.view.menu.**,android.support.v7.** {*;}
+	-repackageclasses "android.support.v7"
   </proguard>
 </target>
 
