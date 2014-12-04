@@ -415,7 +415,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <receiver
-            android:name=".app.NetworkConnectivityListener"
+            android:name="info.guardianproject.otr.app.im.app.NetworkConnectivityListener"
             android:enabled="true"
             android:exported="true" >
             <intent-filter>
@@ -445,7 +445,7 @@
 
         <activity android:name="net.hockeyapp.android.UpdateActivity" />
         <activity
-            android:name=".app.DummyActivity"
+            android:name="info.guardianproject.otr.app.im.app.DummyActivity"
             android:allowTaskReparenting="true"
             android:alwaysRetainTaskState="false"
             android:clearTaskOnLaunch="true"
