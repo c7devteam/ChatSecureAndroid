@@ -142,9 +142,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".app.ActiveChatListView"
-            android:exported="false" />
-        <activity
             android:name="info.guardianproject.otr.app.im.ui.AboutActivity"
             android:exported="false" />
         <activity
@@ -296,7 +293,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".app.ContactListActivity"
+            android:name="info.guardianproject.otr.app.im.app.ContactListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false" >
             <intent-filter>
