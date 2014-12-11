@@ -344,6 +344,7 @@ public class LLXmppConnection extends ImConnection implements CallbackHandler {
                 chat.addMessageListener(new LLMessageListener() {
                     public void processMessage(LLChat chat,
                             org.jivesoftware.smack.packet.Message message) {
+                        Log.i(TAG, "processMessage");
                         String address = message.getFrom();
                         ChatSession session = findOrCreateSession(address);
                         DeliveryReceipts.DeliveryReceipt dr = (DeliveryReceipts.DeliveryReceipt) message
@@ -352,8 +353,9 @@ public class LLXmppConnection extends ImConnection implements CallbackHandler {
                             debug(TAG, "got delivery receipt for " + dr.getId());
                             session.onMessageReceipt(dr.getId());
                         }
-                        if (message.getBody() == null)
+                        if (message.getBody() == null){
                             return;
+                        }
                         Message rec = new Message(message.getBody());
                         rec.setTo(mUser.getAddress());
                         rec.setFrom(session.getParticipant().getAddress());

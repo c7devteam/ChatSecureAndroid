@@ -281,8 +281,10 @@ public class AccountActivity extends ActionBarActivity {
                 mOriginalUserAccount = cursor.getString(ACCOUNT_USERNAME_COLUMN) + "@"
                                        + settings.getDomain();
                 mEditUserAccount.setText(mOriginalUserAccount);
-                if (ImApp.CUBE7_ONLY){
-                    mEditUserCube7Account.setText(JIDManager.getC7AccountByJID(AccountActivity.this, mOriginalUserAccount, cursor.getString(ACCOUNT_PASSWORD_COLUMN)));
+                if (ImApp.CUBE7_ONLY) {
+                    mEditUserCube7Account.setText(JIDManager.getC7AccountByJID(
+                            AccountActivity.this, mOriginalUserAccount,
+                            cursor.getString(ACCOUNT_PASSWORD_COLUMN)));
                 }
                 mEditPass.setText(cursor.getString(ACCOUNT_PASSWORD_COLUMN));
                 mRememberPass.setChecked(!cursor.isNull(ACCOUNT_PASSWORD_COLUMN));
@@ -481,7 +483,7 @@ public class AccountActivity extends ActionBarActivity {
     }
 
     private void signInXMPP() {
-
+        Log.i(TAG, "signXMPP");
         checkUserChanged();
 
         if (mUseTor.isChecked()) {
@@ -558,12 +560,9 @@ public class AccountActivity extends ActionBarActivity {
                         }
                     });
                 } else {
-
                     boolean hasKey = checkForKey(mUserName + '@' + mDomain);
-
                     mSignInHelper.signIn(pass, mProviderId, mAccountId, isActive);
                 }
-
                 isSignedIn = true;
                 setResult(RESULT_OK);
                 finish();
@@ -1069,6 +1068,7 @@ public class AccountActivity extends ActionBarActivity {
 
     public void createNewAccount(String usernameNew, String passwordNew, final long newAccountId,
             final boolean useTor) {
+        Log.i(TAG, "createNewAccount");
         if (mCreateAccountTask != null && (!mCreateAccountTask.isCancelled())) {
             mCreateAccountTask.cancel(true);
         }

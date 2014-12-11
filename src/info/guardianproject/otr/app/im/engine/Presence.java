@@ -1,13 +1,13 @@
 /*
  * Copyright (C) 2007 Esmertec AG. Copyright (C) 2007 The Android Open Source
  * Project
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -22,6 +22,7 @@ import java.util.Map;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 /**
  * A <code>Presence</code> is an abstract presentation of the user's presence
@@ -34,13 +35,15 @@ import android.os.Parcelable;
  * presence data won't be saved or sent to the server.
  */
 public final class Presence implements Parcelable {
+    public static final String TAG = Presence.class.getSimpleName();
+
     public static final int OFFLINE = 0;
     public static final int DO_NOT_DISTURB = 1;
     public static final int AWAY = 2;
     public static final int IDLE = 3;
     public static final int AVAILABLE = 4;
     public static final int NOT_SUBSCRIBED = 5;
-    
+
     public static final int CLIENT_TYPE_DEFAULT = 0;
     public static final int CLIENT_TYPE_MOBILE = 1;
 
@@ -77,7 +80,8 @@ public final class Presence implements Parcelable {
     }
 
     public Presence(Presence p) {
-        this(p.mStatus, p.mStatusText, p.mAvatarData, p.mAvatarType, p.mClientType, p.mExtendedInfo, p.mResource);
+        this(p.mStatus, p.mStatusText, p.mAvatarData, p.mAvatarType, p.mClientType,
+                p.mExtendedInfo, p.mResource);
     }
 
     public Presence(Parcel source) {
@@ -141,6 +145,7 @@ public final class Presence implements Parcelable {
     }
 
     public void setStatus(int status) {
+        Log.i(TAG, "setStatus " + status);
         if (status < OFFLINE || status > AVAILABLE) {
             throw new IllegalArgumentException("invalid presence status value");
         }
@@ -152,6 +157,7 @@ public final class Presence implements Parcelable {
     }
 
     public void setAvatar(byte[] data, String type) {
+        Log.i(TAG, "setAvatar type=" + type + " data=" + (data == null ? null : data.length));
         if (data != null) {
             mAvatarData = new byte[data.length];
             System.arraycopy(data, 0, mAvatarData, 0, data.length);
@@ -193,13 +199,11 @@ public final class Presence implements Parcelable {
         }
     };
 
-    public String getResource ()
-    {
+    public String getResource() {
         return mResource;
     }
 
-    public void setResource (String resource)
-    {
+    public void setResource(String resource) {
         mResource = resource;
     }
 }

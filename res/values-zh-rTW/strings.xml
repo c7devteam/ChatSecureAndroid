@@ -1,8 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <!--General: Names-->
-  <string name="app_name">純淨會晤</string>
-  <string name="im_label">安全聊天</string>
   <!--General: Permissions-->
   <string name="ro_perm_label">讀取即時訊息</string>
   <string name="ro_perm_desc">允許應用程式讀取即時通訊商提供的資料</string>
