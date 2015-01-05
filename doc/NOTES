@@ -28,6 +28,7 @@ G1:
  * 15 second ping - 20% / hr - 18% above baseline
  * ~5% / wakeup / minute / hour
 
+
 Nexus:
  * baseline - 2% / hr
  * 60 second ping - 4% /hr - 2% above baseline
