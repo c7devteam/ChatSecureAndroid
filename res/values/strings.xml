@@ -265,7 +265,9 @@
 		<string name="menu_send_image">Send Photo</string>
 		<string name="menu_send_file">Send File</string>
 		<string name="menu_send_audio">Send Audio</string>
+		<string name="menu_send_location">Send location</string>
 		<string name="menu_take_picture">Take Picture</string>
+	
 		
 		<string name="file_transfer">File Transfer</string>
 		<string name="transfer_complete">Transfer Complete</string>
@@ -563,6 +565,7 @@
 		
 		
 		<!-- Other: Provider -->
+ 		<string name="provider_full_name_cube7">Cube7 Messenger</string>
  		<string name="provider_full_name_xmpp">Jabber (XMPP)</string>
  		<string name="provider_full_name_llxmpp">Local Area (Bonjour/ZeroConf)</string>
  		<string name="google_account">Google Account</string>

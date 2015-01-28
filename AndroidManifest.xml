@@ -32,8 +32,8 @@
     <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="com.google.android.googleapps.permission.GOOGLE_AUTH" />
-
-    <permission
+	<uses-permission android:name="android.permission.BLUETOOTH"/>
+    <permission 
         android:name="info.guardianproject.otr.app.im.permission.IM_SERVICE"
         android:description="@string/perm_desc"
         android:label="@string/perm_label"
@@ -222,6 +222,24 @@
                 android:name="info.guardianproject.otr.app.im.signup_url"
                 android:value="http://xmpp.org/services/" />
         </service>
+        
+        <service
+            android:name=".plugin.xmpp.XmppCube7ImPlugin"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="info.guardianproject.otr.app.im.plugin" />
+            </intent-filter>
+            <meta-data
+                android:name="info.guardianproject.otr.app.im.provider_name"
+                android:value="Cube7 Account" />
+            <meta-data
+                android:name="info.guardianproject.otr.app.im.provider_full_name"
+                android:value="@string/provider_full_name_cube7" />
+            <meta-data
+                android:name="info.guardianproject.otr.app.im.signup_url"
+                android:value="http://www.cube7.com/" />
+        </service>
+        
 
         <!--
         <service android:name=".plugin.loopback.LoopbackImPlugin">

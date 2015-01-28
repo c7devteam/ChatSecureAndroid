@@ -377,18 +377,19 @@ public class ProviderListItem extends LinearLayout {
         if (showPresence && presenceString.length() > 0)
         {
             secondRowTextBuffer.append(presenceString);
-            secondRowTextBuffer.append(" - ");
+            
         }
 
 
-        if (settings.getServer() != null && settings.getServer().length() > 0)
+        if (settings.getServer() != null && settings.getServer().length() > 0 && !ImApp.IS_CUBE7_ONLY)
         {
-
+            secondRowTextBuffer.append(" - ");
             secondRowTextBuffer.append(settings.getServer());
 
         }
-        else if (settings.getDomain() != null & settings.getDomain().length() > 0)
+        else if (settings.getDomain() != null & settings.getDomain().length() > 0 && !ImApp.IS_CUBE7_ONLY)
         {
+            secondRowTextBuffer.append(" - ");
             secondRowTextBuffer.append(settings.getDomain());
         }
 

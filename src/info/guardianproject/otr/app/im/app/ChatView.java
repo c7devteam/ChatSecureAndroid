@@ -1,13 +1,13 @@
 /*
  * Copyright (C) 2008 Esmertec AG. Copyright (C) 2008 The Android Open Source
  * Project
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -114,8 +114,7 @@ public class ChatView extends LinearLayout {
                                              Imps.Contacts.PROVIDER, Imps.Contacts.USERNAME,
                                              Imps.Contacts.NICKNAME, Imps.Contacts.TYPE,
                                              Imps.Presence.PRESENCE_STATUS,
-                                             Imps.Chats.LAST_UNREAD_MESSAGE,
-                                             Imps.Chats._ID,
+                                             Imps.Chats.LAST_UNREAD_MESSAGE, Imps.Chats._ID,
                                              Imps.Contacts.SUBSCRIPTION_TYPE,
                                              Imps.Contacts.SUBSCRIPTION_STATUS,
                                              Imps.Contacts.AVATAR_DATA
@@ -154,16 +153,18 @@ public class ChatView extends LinearLayout {
     IImConnection mConn;
 
     //private ImageView mStatusIcon;
-   // private TextView mTitle;
+    // private TextView mTitle;
     /*package*/ListView mHistory;
     EditText mComposeMessage;
-    private ImageButton mSendButton;
+    
+    private View mTextPanel;
+    private ImageButton mSendButton, mEmojiButton;
     private View mStatusWarningView;
     private TextView mWarningText;
     private ProgressBar mProgressTransfer;
 
     private ViewPager mEmojiPager;
-   // private View mActionBox;
+    // private View mActionBox;
 
     private ImageView mDeliveryIcon;
     private boolean mExpectingDelivery;
@@ -176,117 +177,98 @@ public class ChatView extends LinearLayout {
     private SessionStatus mLastSessionStatus = null;
     private boolean mIsVerified = false;
 
-    public void setSelected (boolean isSelected)
-    {
+    public void setSelected(boolean isSelected) {
         mIsSelected = isSelected;
 
-        if (mIsSelected)
-        {
+        if (mIsSelected) {
             bindChat(mLastChatId);
             setTitle();
             updateWarningView();
             mComposeMessage.requestFocus();
 
-            try
-            {
-                boolean isConnected = (mConn == null) ? false : mConn.getState() != ImConnection.SUSPENDED;
+            try {
+                boolean isConnected = (mConn == null) ? false
+                                                     : mConn.getState() != ImConnection.SUSPENDED;
 
-                        
                 if (mLastSessionStatus == SessionStatus.PLAINTEXT && isConnected) {
-
-
                     boolean otrPolicyAuto = mNewChatActivity.getOtrPolicy() == OtrPolicy.OTRL_POLICY_ALWAYS
-                            || this.mNewChatActivity.getOtrPolicy() == OtrPolicy.OPPORTUNISTIC;
-
+                                            || this.mNewChatActivity.getOtrPolicy() == OtrPolicy.OPPORTUNISTIC;
                     IOtrChatSession otrChatSession = mCurrentChatSession.getOtrChatSession();
-                    
-                    if (otrChatSession != null)
-                    {
+                    if (otrChatSession != null) {
                         String remoteJID = otrChatSession.getRemoteUserId();
-                        
-                        boolean isChatSecure = (remoteJID != null && remoteJID.contains("ChatSecure"));
-                            
+
+                        boolean isChatSecure = (remoteJID != null && remoteJID
+                                .contains("ChatSecure"));
+
                         if (otrPolicyAuto && isChatSecure) //if set to auto, and is chatsecure, then start encryption
                         {
-                               //automatically attempt to turn on OTR after 1 second
-                                mHandler.postAtTime(new Runnable (){
-                                    public void run (){  setOTRState(true);}
-                                 },1000);
+                            //automatically attempt to turn on OTR after 1 second
+                            mHandler.postAtTime(new Runnable() {
+                                public void run() {
+                                    setOTRState(true);
+                                }
+                            }, 1000);
                         }
                     }
 
                 }
+            } catch (RemoteException re) {
             }
-            catch (RemoteException re){}
         }
-
 
     }
 
-
-    private boolean checkConnection () throws RemoteException
-    {
-        if (mConn == null)
-        {
-            mConn = mApp.createConnection(mProviderId,mAccountId);
-
+    private boolean checkConnection() throws RemoteException {
+        if (mConn == null) {
+            mConn = mApp.createConnection(mProviderId, mAccountId);
             if (mConn != null)
                 return false;
-
         }
-
         return true;
-
-
     }
 
     public void setOTRState(boolean otrEnabled) {
 
-
         try {
 
-            boolean isConnected = (mConn == null) ? false : mConn.getState() != ImConnection.SUSPENDED;
+            boolean isConnected = (mConn == null) ? false
+                                                 : mConn.getState() != ImConnection.SUSPENDED;
 
-            if (isConnected)
-            {
+            if (isConnected) {
                 if (mCurrentChatSession == null)
-                    mCurrentChatSession = mConn.getChatSessionManager().getChatSession(Address.stripResource(mRemoteAddress));
+                    mCurrentChatSession = mConn.getChatSessionManager().getChatSession(
+                            Address.stripResource(mRemoteAddress));
 
-                if (mCurrentChatSession != null)
-                {
+                if (mCurrentChatSession != null) {
                     IOtrChatSession otrChatSession = mCurrentChatSession.getOtrChatSession();
 
-                    if (otrChatSession != null)
-                    {
+                    if (otrChatSession != null) {
 
                         if (otrEnabled) {
 
                             otrChatSession.startChatEncryption();
 
-                         //   Toast.makeText(getContext(),getResources().getString(R.string.starting_otr_chat), Toast.LENGTH_LONG).show();
-                        }
-                        else
-                        {
+                            //   Toast.makeText(getContext(),getResources().getString(R.string.starting_otr_chat), Toast.LENGTH_LONG).show();
+                        } else {
                             otrChatSession.stopChatEncryption();
-                           // Toast.makeText(getContext(),getResources().getString(R.string.stopping_otr_chat), Toast.LENGTH_LONG).show();
+                            // Toast.makeText(getContext(),getResources().getString(R.string.stopping_otr_chat), Toast.LENGTH_LONG).show();
 
                         }
 
-                        mHandler.postAtTime(new Runnable (){
-                           public void run (){ updateWarningView();}
+                        mHandler.postAtTime(new Runnable() {
+                            public void run() {
+                                updateWarningView();
+                            }
                         }, 1000);
-
 
                     }
                 }
 
             }
 
-        }
-        catch (RemoteException e) {
+        } catch (RemoteException e) {
             Log.d(ImApp.LOG_TAG, "error getting remote activity", e);
         }
-
 
     }
 
@@ -294,11 +276,10 @@ public class ChatView extends LinearLayout {
     private boolean isServiceUp;
     private IChatSession mCurrentChatSession;
 
-    long mLastChatId=-1;
+    long mLastChatId = -1;
     String mRemoteNickname;
     String mRemoteAddress;
     RoundedAvatarDrawable mRemoteAvatar = null;
-
 
     long mProviderId;
     long mAccountId;
@@ -332,9 +313,7 @@ public class ChatView extends LinearLayout {
         protected void onQueryComplete(int token, Object cookie, Cursor c) {
             mExpectingDelivery = false;
 
-
-            if (c != null)
-            {
+            if (c != null) {
                 mLastCursor = new DeltaCursor(c);
 
                 if (Log.isLoggable(ImApp.LOG_TAG, Log.DEBUG)) {
@@ -346,8 +325,7 @@ public class ChatView extends LinearLayout {
             }
         }
 
-        public void closeCursor ()
-        {
+        public void closeCursor() {
             if (mLastCursor != null)
                 mLastCursor.close();
 
@@ -384,7 +362,6 @@ public class ChatView extends LinearLayout {
             URLSpan[] links = ((MessageView) view).getMessageLinks();
             if (links.length > 0) {
 
-
                 final ArrayList<String> linkUrls = new ArrayList<String>(links.length);
                 for (URLSpan u : links) {
                     linkUrls.add(u.getURL());
@@ -401,7 +378,8 @@ public class ChatView extends LinearLayout {
                         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                         intent.putExtra(ImServiceConstants.EXTRA_INTENT_PROVIDER_ID, mProviderId);
                         intent.putExtra(ImServiceConstants.EXTRA_INTENT_ACCOUNT_ID, mAccountId);
-                        intent.putExtra(Browser.EXTRA_APPLICATION_ID, mNewChatActivity.getPackageName());
+                        intent.putExtra(Browser.EXTRA_APPLICATION_ID,
+                                mNewChatActivity.getPackageName());
                         mNewChatActivity.startActivity(intent);
                     }
                 });
@@ -412,9 +390,7 @@ public class ChatView extends LinearLayout {
                     }
                 });
                 b.show();
-            }
-            else
-            {
+            } else {
                 showVerifyDialog();
             }
         }
@@ -423,7 +399,6 @@ public class ChatView extends LinearLayout {
     private final static int PROMPT_FOR_DATA_TRANSFER = 9999;
     private final static int SHOW_DATA_PROGRESS = 9998;
     private final static int SHOW_DATA_ERROR = 9997;
-
 
     private IChatListener mChatListener = new ChatListenerAdapter() {
         @Override
@@ -460,19 +435,18 @@ public class ChatView extends LinearLayout {
             scheduleRequery(DEFAULT_QUERY_INTERVAL);
         };
 
-
         @Override
-        public void onIncomingFileTransfer(String transferFrom, String transferUrl) throws RemoteException {
+        public void onIncomingFileTransfer(String transferFrom, String transferUrl)
+                throws RemoteException {
 
             String[] path = transferUrl.split("/");
             String sanitizedPath = SystemServices.sanitize(path[path.length - 1]);
 
-            android.os.Message message = android.os.Message.obtain(null, PROMPT_FOR_DATA_TRANSFER, (int) (mProviderId >> 32),
-                    (int) mProviderId, -1);
+            android.os.Message message = android.os.Message.obtain(null, PROMPT_FOR_DATA_TRANSFER,
+                    (int) (mProviderId >> 32), (int) mProviderId, -1);
             message.getData().putString("from", transferFrom);
             message.getData().putString("file", sanitizedPath);
             mHandler.sendMessage(message);
-
 
         }
 
@@ -480,10 +454,10 @@ public class ChatView extends LinearLayout {
         public void onIncomingFileTransferProgress(String file, float percent)
                 throws RemoteException {
 
-            android.os.Message message = android.os.Message.obtain(null, SHOW_DATA_PROGRESS, (int) (mProviderId >> 32),
-                    (int) mProviderId, -1);
+            android.os.Message message = android.os.Message.obtain(null, SHOW_DATA_PROGRESS,
+                    (int) (mProviderId >> 32), (int) mProviderId, -1);
             message.getData().putString("file", file);
-            message.getData().putInt("progress", (int)percent);
+            message.getData().putInt("progress", (int) percent);
 
             mHandler.sendMessage(message);
 
@@ -492,41 +466,41 @@ public class ChatView extends LinearLayout {
         @Override
         public void onIncomingFileTransferError(String file, String err) throws RemoteException {
 
-
-            android.os.Message message = android.os.Message.obtain(null, SHOW_DATA_ERROR, (int) (mProviderId >> 32),
-                    (int) mProviderId, -1);
+            android.os.Message message = android.os.Message.obtain(null, SHOW_DATA_ERROR,
+                    (int) (mProviderId >> 32), (int) mProviderId, -1);
             message.getData().putString("file", file);
             message.getData().putString("err", err);
 
             mHandler.sendMessage(message);
         }
 
-
     };
 
-    private void showPromptForData (String transferFrom, String filePath)
-    {
+    private void showPromptForData(String transferFrom, String filePath) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mNewChatActivity);
 
         builder.setTitle(mContext.getString(R.string.file_transfer));
-        builder.setMessage(transferFrom + ' ' + mNewChatActivity.getString(R.string.wants_to_send_you_the_file)
-        + " '" + filePath + "'. " + mNewChatActivity.getString(R.string.accept_transfer_));
+        builder.setMessage(transferFrom + ' '
+                           + mNewChatActivity.getString(R.string.wants_to_send_you_the_file) + " '"
+                           + filePath + "'. "
+                           + mNewChatActivity.getString(R.string.accept_transfer_));
 
-        builder.setNeutralButton(R.string.button_yes_accept_all,new DialogInterface.OnClickListener() {
+        builder.setNeutralButton(R.string.button_yes_accept_all,
+                new DialogInterface.OnClickListener() {
 
-            public void onClick(DialogInterface dialog, int which) {
+                    public void onClick(DialogInterface dialog, int which) {
 
-                try {
-                    mCurrentChatSession.setIncomingFileResponse(true, true);
-                } catch (RemoteException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                        try {
+                            mCurrentChatSession.setIncomingFileResponse(true, true);
+                        } catch (RemoteException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
 
-                dialog.dismiss();
-            }
+                        dialog.dismiss();
+                    }
 
-        });
+                });
 
         builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
 
@@ -555,7 +529,6 @@ public class ChatView extends LinearLayout {
                     e.printStackTrace();
                 }
 
-
                 // Do nothing
                 dialog.dismiss();
             }
@@ -568,9 +541,9 @@ public class ChatView extends LinearLayout {
 
     private Runnable mUpdateChatCallback = new Runnable() {
         public void run() {
-           // if (mCursor != null && mCursor.requery() && mCursor.moveToFirst()) {
-                updateChat();
-           // }
+            // if (mCursor != null && mCursor.requery() && mCursor.moveToFirst()) {
+            updateChat();
+            // }
         }
     };
 
@@ -610,7 +583,7 @@ public class ChatView extends LinearLayout {
     public ChatView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mNewChatActivity = (NewChatActivity) context;
-        mApp = (ImApp)mNewChatActivity.getApplication();
+        mApp = (ImApp) mNewChatActivity.getApplication();
         mHandler = new ChatViewHandler(mNewChatActivity);
         mContext = context;
 
@@ -627,9 +600,10 @@ public class ChatView extends LinearLayout {
 
     @Override
     protected void onFinishInflate() {
-      //  mStatusIcon = (ImageView) findViewById(R.id.statusIcon);
-     //   mDeliveryIcon = (ImageView) findViewById(R.id.deliveryIcon);
-       // mTitle = (TextView) findViewById(R.id.title);
+        //  mStatusIcon = (ImageView) findViewById(R.id.statusIcon);
+        //   mDeliveryIcon = (ImageView) findViewById(R.id.deliveryIcon);
+        // mTitle = (TextView) findViewById(R.id.title);
+        mTextPanel=findViewById(R.id.textPanel);
         mHistory = (ListView) findViewById(R.id.history);
         mComposeMessage = (EditText) findViewById(R.id.composeMessage);
         mSendButton = (ImageButton) findViewById(R.id.btnSend);
@@ -638,37 +612,39 @@ public class ChatView extends LinearLayout {
         mStatusWarningView = findViewById(R.id.warning);
         mWarningText = (TextView) findViewById(R.id.warningText);
 
-        mProgressTransfer = (ProgressBar)findViewById(R.id.progressTransfer);
-       // mOtrSwitch = (CompoundButton)findViewById(R.id.otrSwitch);
+        mProgressTransfer = (ProgressBar) findViewById(R.id.progressTransfer);
+        // mOtrSwitch = (CompoundButton)findViewById(R.id.otrSwitch);
 
-        mHistory.setOnItemLongClickListener(new OnItemLongClickListener ()
-        {
+        mHistory.setOnItemLongClickListener(new OnItemLongClickListener() {
 
             @TargetApi(Build.VERSION_CODES.HONEYCOMB)
             @Override
             public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
 
+                if (arg1 instanceof MessageView) {
 
-             if (arg1 instanceof MessageView)
-             {
+                    String textToCopy = ((MessageView) arg1).getLastMessage();
 
-                 String textToCopy = ((MessageView)arg1).getLastMessage();
+                    int sdk = android.os.Build.VERSION.SDK_INT;
+                    if (sdk < android.os.Build.VERSION_CODES.HONEYCOMB) {
+                        android.text.ClipboardManager clipboard = (android.text.ClipboardManager) mNewChatActivity
+                                .getSystemService(Context.CLIPBOARD_SERVICE);
+                        clipboard.setText(textToCopy); //
+                    } else {
+                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) mNewChatActivity
+                                .getSystemService(Context.CLIPBOARD_SERVICE);
+                        android.content.ClipData clip = android.content.ClipData.newPlainText(
+                                "chat", textToCopy);
+                        clipboard.setPrimaryClip(clip); //
+                    }
 
-                 int sdk = android.os.Build.VERSION.SDK_INT;
-                 if(sdk < android.os.Build.VERSION_CODES.HONEYCOMB) {
-                     android.text.ClipboardManager clipboard = (android.text.ClipboardManager) mNewChatActivity.getSystemService(Context.CLIPBOARD_SERVICE);
-                     clipboard.setText(textToCopy); //
-                 } else {
-                     android.content.ClipboardManager clipboard = (android.content.ClipboardManager) mNewChatActivity.getSystemService(Context.CLIPBOARD_SERVICE);
-                     android.content.ClipData clip = android.content.ClipData.newPlainText("chat",textToCopy);
-                     clipboard.setPrimaryClip(clip); //
-                 }
+                    Toast.makeText(mNewChatActivity,
+                            mContext.getString(R.string.toast_chat_copied_to_clipboard),
+                            Toast.LENGTH_SHORT).show();
 
-                 Toast.makeText(mNewChatActivity, mContext.getString(R.string.toast_chat_copied_to_clipboard), Toast.LENGTH_SHORT).show();
+                    return true;
 
-                 return true;
-
-             }
+                }
 
                 return false;
             }
@@ -713,7 +689,8 @@ public class ChatView extends LinearLayout {
                     }
                 }
 
-                InputMethodManager imm = (InputMethodManager)mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) mContext
+                        .getSystemService(Context.INPUT_METHOD_SERVICE);
                 if (imm != null && imm.isActive(v)) {
                     imm.hideSoftInputFromWindow(getWindowToken(), 0);
                 }
@@ -743,30 +720,27 @@ public class ChatView extends LinearLayout {
             }
         });
 
-        Button btnApproveSubscription = (Button)findViewById(R.id.btnApproveSubscription);
-        btnApproveSubscription.setOnClickListener(new OnClickListener()
-        {
+        Button btnApproveSubscription = (Button) findViewById(R.id.btnApproveSubscription);
+        btnApproveSubscription.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
 
                 mNewChatActivity.approveSubscription(mProviderId, mRemoteAddress);
-            //    updateSessionInfo();
+                //    updateSessionInfo();
 
             }
 
         });
 
-        Button btnDeclineSubscription = (Button)findViewById(R.id.btnDeclineSubscription);
-        btnDeclineSubscription.setOnClickListener(new OnClickListener()
-        {
+        Button btnDeclineSubscription = (Button) findViewById(R.id.btnDeclineSubscription);
+        btnDeclineSubscription.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
 
                 mNewChatActivity.declineSubscription(mProviderId, mRemoteAddress);
-              //  updateSessionInfo();
-
+                //  updateSessionInfo();
 
             }
 
@@ -858,74 +832,56 @@ public class ChatView extends LinearLayout {
 
         initEmoji();
 
-
         mMessageAdapter = new MessageAdapter(mNewChatActivity, null);
         mHistory.setAdapter(mMessageAdapter);
+        
     }
 
     private static EmojiManager emojiManager = null;
 
-    private synchronized void initEmoji ()
-    {
-        if (emojiManager == null)
-        {
+    private synchronized void initEmoji() {
+        if (emojiManager == null) {
             emojiManager = EmojiManager.getInstance(mContext);
 
-            try
-            {
+            try {
 
                 emojiManager.addJsonPlugins();
 
-            }
-            catch (JsonSyntaxException jse)
-            {
-                    Log.e(ImApp.LOG_TAG,"could not parse json", jse);
-            }
-            catch (IOException fe)
-            {
-                    Log.e(ImApp.LOG_TAG,"could not load emoji definition",fe);
-            }
-            catch (Exception fe)
-            {
-                    Log.e(ImApp.LOG_TAG,"could not load emoji definition",fe);
+            } catch (JsonSyntaxException jse) {
+                Log.e(ImApp.LOG_TAG, "could not parse json", jse);
+            } catch (IOException fe) {
+                Log.e(ImApp.LOG_TAG, "could not load emoji definition", fe);
+            } catch (Exception fe) {
+                Log.e(ImApp.LOG_TAG, "could not load emoji definition", fe);
             }
 
         }
 
+        mEmojiPager = (ViewPager) this.findViewById(R.id.emojiPager);
 
-        mEmojiPager = (ViewPager)this.findViewById(R.id.emojiPager);
-        ImageView btnEmoji = (ImageView)findViewById(R.id.btnEmoji);
+        mEmojiButton = (ImageButton) findViewById(R.id.btnEmoji);
 
         Collection<EmojiGroup> emojiGroups = emojiManager.getEmojiGroups();
 
-        if (emojiGroups.size() == 0)
-        {
-            btnEmoji.setVisibility(View.GONE);
-        }
-        else
-        {
-            EmojiPagerAdapter emojiPagerAdapter = new EmojiPagerAdapter(mNewChatActivity, mComposeMessage, new ArrayList<EmojiGroup>(emojiGroups));
+        if (emojiGroups.size() == 0) {
+            mEmojiButton.setVisibility(View.GONE);
+        } else {
+            EmojiPagerAdapter emojiPagerAdapter = new EmojiPagerAdapter(mNewChatActivity,
+                    mComposeMessage, new ArrayList<EmojiGroup>(emojiGroups));
 
             mEmojiPager.setAdapter(emojiPagerAdapter);
 
-            btnEmoji.setOnClickListener(new OnClickListener ()
-            {
-
+            mEmojiButton.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
-
-              //     mActionBox.setVisibility(View.GONE);
-
+                    //     mActionBox.setVisibility(View.GONE);
                     if (mEmojiPager.getVisibility() == View.GONE)
                         mEmojiPager.setVisibility(View.VISIBLE);
                     else
                         mEmojiPager.setVisibility(View.GONE);
                 }
-
             });
         }
-
 
     }
 
@@ -952,8 +908,8 @@ public class ChatView extends LinearLayout {
     public void stopListening() {
         //Cursor cursor = getMessageCursor();
         //if (cursor != null && (!cursor.isClosed())) {
-         //   cursor.close();
-       // }
+        //   cursor.close();
+        // }
 
         cancelRequery();
         unregisterChatListener();
@@ -968,11 +924,10 @@ public class ChatView extends LinearLayout {
 
     }
 
-
     void updateChat() {
         setViewType(VIEW_TYPE_CHAT);
 
-//        updateSessionInfo();
+        //        updateSessionInfo();
 
         setStatusIcon();
 
@@ -1005,8 +960,7 @@ public class ChatView extends LinearLayout {
 
     private void updateSessionInfo(Cursor c) {
 
-        if (c != null && (!c.isClosed()))
-        {
+        if (c != null && (!c.isClosed())) {
             mProviderId = c.getLong(PROVIDER_COLUMN);
             mAccountId = c.getLong(ACCOUNT_COLUMN);
             mPresenceStatus = c.getInt(PRESENCE_STATUS_COLUMN);
@@ -1021,18 +975,15 @@ public class ChatView extends LinearLayout {
             if ((subscriptionType == Imps.Contacts.SUBSCRIPTION_TYPE_FROM)
                 && (subscriptionStatus == Imps.Contacts.SUBSCRIPTION_STATUS_SUBSCRIBE_PENDING)) {
 
-
                 bindSubscription(mProviderId, mRemoteAddress);
             }
         }
 
     }
 
-    public void setTitle ()
-    {
-        if (mIsSelected)
-        {
-            mNewChatActivity.setTitle(mRemoteNickname,mRemoteAvatar);
+    public void setTitle() {
+        if (mIsSelected) {
+            mNewChatActivity.setTitle(mRemoteAddress, mRemoteAvatar);
 
         }
     }
@@ -1065,7 +1016,6 @@ public class ChatView extends LinearLayout {
             avatar.setBorderColor(getResources().getColor(R.color.holo_grey_light));
             avatar.setAlpha(100);
             break;
-
 
         default:
         }
@@ -1122,13 +1072,12 @@ public class ChatView extends LinearLayout {
        // }
     }*/
 
-
     private void setStatusIcon() {
         if (mContactType == Imps.Contacts.TYPE_GROUP) {
             // hide the status icon for group chat.
-         //   mStatusIcon.setVisibility(GONE);
+            //   mStatusIcon.setVisibility(GONE);
         } else {
-          //  mStatusIcon.setVisibility(VISIBLE);
+            //  mStatusIcon.setVisibility(VISIBLE);
             BrandingResources brandingRes = mApp.getBrandingResource(mProviderId);
             int presenceResId = PresenceUtils.getStatusIconId(mPresenceStatus);
             //mStatusIcon.setImageDrawable(brandingRes.getDrawable(presenceResId));
@@ -1136,10 +1085,9 @@ public class ChatView extends LinearLayout {
         }
     }
 
-    private void deleteChat ()
-    {
+    private void deleteChat() {
         Uri chatUri = ContentUris.withAppendedId(Imps.Chats.CONTENT_URI, mLastChatId);
-        mNewChatActivity.getContentResolver().delete(chatUri,null,null);
+        mNewChatActivity.getContentResolver().delete(chatUri, null, null);
 
     }
 
@@ -1148,8 +1096,8 @@ public class ChatView extends LinearLayout {
         mLastChatId = chatId;
 
         Uri contactUri = ContentUris.withAppendedId(Imps.Contacts.CONTENT_URI, chatId);
-        Cursor c = mNewChatActivity.getContentResolver().query(contactUri, CHAT_PROJECTION, null, null, null);
-
+        Cursor c = mNewChatActivity.getContentResolver().query(contactUri, CHAT_PROJECTION, null,
+                null, null);
 
         if (c == null)
             return;
@@ -1166,24 +1114,22 @@ public class ChatView extends LinearLayout {
 
             updateSessionInfo(c);
 
+            if (mRemoteAvatar == null) {
+                try {
+                    mRemoteAvatar = DatabaseUtils.getAvatarFromCursor(c, AVATAR_COLUMN,
+                            ImApp.DEFAULT_AVATAR_WIDTH, ImApp.DEFAULT_AVATAR_HEIGHT);
+                } catch (Exception e) {
+                }
 
-
-            if (mRemoteAvatar == null)
-            {
-                try {mRemoteAvatar =DatabaseUtils.getAvatarFromCursor(c, AVATAR_COLUMN, ImApp.DEFAULT_AVATAR_WIDTH,ImApp.DEFAULT_AVATAR_HEIGHT);}
-                catch (Exception e){}
-
-                if (mRemoteAvatar == null)
-                {
-                    mRemoteAvatar = new RoundedAvatarDrawable(BitmapFactory.decodeResource(getResources(),
-                            R.drawable.avatar_unknown));
+                if (mRemoteAvatar == null) {
+                    mRemoteAvatar = new RoundedAvatarDrawable(BitmapFactory.decodeResource(
+                            getResources(), R.drawable.avatar_unknown));
 
                 }
 
                 setAvatarBorder(mPresenceStatus, mRemoteAvatar);
 
             }
-
 
             c.close();
 
@@ -1227,14 +1173,12 @@ public class ChatView extends LinearLayout {
             cursor.close();
         }
 
-
     }
-
 
     public void bindSubscription(long providerId, String from) {
         mProviderId = providerId;
 
-      //  mRemoteAddressString = from;
+        //  mRemoteAddressString = from;
 
         setViewType(VIEW_TYPE_SUBSCRIPTION);
 
@@ -1245,7 +1189,6 @@ public class ChatView extends LinearLayout {
 
         mApp.dismissChatNotification(providerId, from);
     }
-
 
     private void setViewType(int type) {
         mViewType = type;
@@ -1357,7 +1300,7 @@ public class ChatView extends LinearLayout {
             } catch (RemoteException e) {
 
                 mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-                LogCleaner.error(ImApp.LOG_TAG, "send message error",e);
+                LogCleaner.error(ImApp.LOG_TAG, "send message error", e);
             }
         }
 
@@ -1366,18 +1309,15 @@ public class ChatView extends LinearLayout {
 
     }
 
-    public void verifyScannedFingerprint (String scannedFingerprint)
-    {
-        try
-        {
+    public void verifyScannedFingerprint(String scannedFingerprint) {
+        try {
             IOtrChatSession otrChatSession = mCurrentChatSession.getOtrChatSession();
 
-            if (scannedFingerprint != null && scannedFingerprint.equalsIgnoreCase(otrChatSession.getRemoteFingerprint())) {
+            if (scannedFingerprint != null
+                && scannedFingerprint.equalsIgnoreCase(otrChatSession.getRemoteFingerprint())) {
                 verifyRemoteFingerprint();
             }
-        }
-        catch (RemoteException e)
-        {
+        } catch (RemoteException e) {
             LogCleaner.error(ImApp.LOG_TAG, "unable to perform manual key verification", e);
         }
     }
@@ -1437,34 +1377,40 @@ public class ChatView extends LinearLayout {
     }
 
     private void initSmpUI() {
-        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) mContext
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         final View viewSmp = inflater.inflate(R.layout.smp_question_dialog, null, false);
 
-        if (viewSmp != null)
-        {
-            new AlertDialog.Builder(mContext).setTitle(mContext.getString(R.string.otr_qa_title)).setView(viewSmp)
-                    .setPositiveButton(mContext.getString(R.string.otr_qa_send), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
+        if (viewSmp != null) {
+            new AlertDialog.Builder(mContext)
+                    .setTitle(mContext.getString(R.string.otr_qa_title))
+                    .setView(viewSmp)
+                    .setPositiveButton(mContext.getString(R.string.otr_qa_send),
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
 
-                            EditText eiQuestion = (EditText) viewSmp.findViewById(R.id.editSmpQuestion);
-                            EditText eiAnswer = (EditText) viewSmp.findViewById(R.id.editSmpAnswer);
-                            String question = eiQuestion.getText().toString();
-                            String answer = eiAnswer.getText().toString();
-                            initSmp(question, answer);
-                        }
-                    }).setNegativeButton(mContext.getString(R.string.otr_qa_cancel), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-                            // Do nothing.
-                        }
-                    }).show();
+                                    EditText eiQuestion = (EditText) viewSmp
+                                            .findViewById(R.id.editSmpQuestion);
+                                    EditText eiAnswer = (EditText) viewSmp
+                                            .findViewById(R.id.editSmpAnswer);
+                                    String question = eiQuestion.getText().toString();
+                                    String answer = eiAnswer.getText().toString();
+                                    initSmp(question, answer);
+                                }
+                            })
+                    .setNegativeButton(mContext.getString(R.string.otr_qa_cancel),
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                    // Do nothing.
+                                }
+                            }).show();
         }
     }
 
     private void initSmp(String question, String answer) {
         try {
 
-            if (mCurrentChatSession != null)
-            {
+            if (mCurrentChatSession != null) {
                 IOtrChatSession iOtrSession = mCurrentChatSession.getOtrChatSession();
                 iOtrSession.initSmpVerification(question, answer);
             }
@@ -1477,12 +1423,10 @@ public class ChatView extends LinearLayout {
 
     private void verifyRemoteFingerprint() {
 
-
         try {
 
             IOtrChatSession otrChatSession = mCurrentChatSession.getOtrChatSession();
             otrChatSession.verifyKey(otrChatSession.getRemoteUserId());
-
 
         } catch (RemoteException e) {
             Log.e(ImApp.LOG_TAG, "error init otr", e);
@@ -1491,17 +1435,13 @@ public class ChatView extends LinearLayout {
 
         updateWarningView();
 
-
     }
 
-
-    private static String prettyPrintFingerprint (String fingerprint)
-    {
+    private static String prettyPrintFingerprint(String fingerprint) {
         StringBuffer spacedFingerprint = new StringBuffer();
 
-        for (int i = 0; i + 8 <= fingerprint.length(); i+=8)
-        {
-            spacedFingerprint.append(fingerprint.subSequence(i,i+8));
+        for (int i = 0; i + 8 <= fingerprint.length(); i += 8) {
+            spacedFingerprint.append(fingerprint.subSequence(i, i + 8));
             spacedFingerprint.append(' ');
         }
 
@@ -1517,11 +1457,11 @@ public class ChatView extends LinearLayout {
                     mConn = mApp.getConnection(mProviderId);
                     IContactListManager manager = mConn.getContactListManager();
                     manager.blockContact(Address.stripResource(mRemoteAddress));
-                  //  mNewChatActivity.finish();
+                    //  mNewChatActivity.finish();
                 } catch (Exception e) {
 
                     mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-                    LogCleaner.error(ImApp.LOG_TAG, "send message error",e);
+                    LogCleaner.error(ImApp.LOG_TAG, "send message error", e);
                 }
             }
         };
@@ -1544,32 +1484,31 @@ public class ChatView extends LinearLayout {
         return mAccountId;
     }
 
-
     public long getChatId() {
         return mLastChatId;
     }
 
     private IChatSession createChatSession() {
 
-        try
-        {
-            checkConnection ();
+        try {
+            checkConnection();
 
             if (mConn != null) {
-                    IChatSessionManager sessionMgr = mConn.getChatSessionManager();
-                    if (sessionMgr != null) {
+                IChatSessionManager sessionMgr = mConn.getChatSessionManager();
+                if (sessionMgr != null) {
 
-                        IChatSession session = sessionMgr.createChatSession(Address.stripResource(mRemoteAddress),false);
+                    IChatSession session = sessionMgr.createChatSession(
+                            Address.stripResource(mRemoteAddress), false);
 
-                        return session;
+                    return session;
 
-                    }
+                }
             }
 
         } catch (Exception e) {
 
             //mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-            LogCleaner.error(ImApp.LOG_TAG, "issue getting chat session",e);
+            LogCleaner.error(ImApp.LOG_TAG, "issue getting chat session", e);
         }
 
         return null;
@@ -1579,19 +1518,19 @@ public class ChatView extends LinearLayout {
 
         try {
 
-            if ( checkConnection ()) {
+            if (checkConnection()) {
 
-                if (mConn != null)
-                {
+                if (mConn != null) {
                     IChatSessionManager sessionMgr = mConn.getChatSessionManager();
                     if (sessionMgr != null) {
 
-                            IChatSession session = sessionMgr.getChatSession(Address.stripResource(mRemoteAddress));
+                        IChatSession session = sessionMgr.getChatSession(Address
+                                .stripResource(mRemoteAddress));
 
-                         //   if (session == null)
-                           //     session = sessionMgr.createChatSession(Address.stripResource(mRemoteAddress));
+                        //   if (session == null)
+                        //     session = sessionMgr.createChatSession(Address.stripResource(mRemoteAddress));
 
-                            return session;
+                        return session;
 
                     }
                 }
@@ -1600,7 +1539,7 @@ public class ChatView extends LinearLayout {
         } catch (Exception e) {
 
             //mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-            LogCleaner.error(ImApp.LOG_TAG, "error getting chat session",e);
+            LogCleaner.error(ImApp.LOG_TAG, "error getting chat session", e);
         }
 
         return null;
@@ -1610,12 +1549,11 @@ public class ChatView extends LinearLayout {
 
         boolean isGroupChat = false;
 
-        if (mCurrentChatSession != null)
-        {
+        if (mCurrentChatSession != null) {
             try {
                 isGroupChat = mCurrentChatSession.isGroupChatSession();
+            } catch (Exception e) {
             }
-            catch (Exception e){}
 
         }
 
@@ -1643,12 +1581,12 @@ public class ChatView extends LinearLayout {
                 requeryCursor();
             } catch (RemoteException e) {
 
-              //  mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-                LogCleaner.error(ImApp.LOG_TAG, "send message error",e);
+                //  mHandler.showServiceErrorAlert(e.getLocalizedMessage());
+                LogCleaner.error(ImApp.LOG_TAG, "send message error", e);
             } catch (Exception e) {
 
-              //  mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-                LogCleaner.error(ImApp.LOG_TAG, "send message error",e);
+                //  mHandler.showServiceErrorAlert(e.getLocalizedMessage());
+                LogCleaner.error(ImApp.LOG_TAG, "send message error", e);
             }
         }
     }
@@ -1665,7 +1603,7 @@ public class ChatView extends LinearLayout {
                 requeryCursor();
             } catch (Exception e) {
                 mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-                LogCleaner.error(ImApp.LOG_TAG, "send message error",e);
+                LogCleaner.error(ImApp.LOG_TAG, "send message error", e);
             }
         }
     }
@@ -1681,8 +1619,7 @@ public class ChatView extends LinearLayout {
 
             checkConnection();
 
-            if (mConn != null)
-            {
+            if (mConn != null) {
                 IContactListManager listMgr = mConn.getContactListManager();
                 listMgr.registerContactListListener(mContactListListener);
             }
@@ -1700,7 +1637,7 @@ public class ChatView extends LinearLayout {
             if (getChatSession() != null) {
                 getChatSession().unregisterChatListener(mChatListener);
             }
-            checkConnection ();
+            checkConnection();
 
             if (mConn != null) {
                 IContactListManager listMgr = mConn.getContactListManager();
@@ -1718,7 +1655,6 @@ public class ChatView extends LinearLayout {
         String message = null;
         boolean isConnected;
 
-
         try {
             checkConnection();
             isConnected = (mConn == null) ? false : mConn.getState() == ImConnection.LOGGED_IN;
@@ -1728,20 +1664,17 @@ public class ChatView extends LinearLayout {
             isConnected = false;
         }
 
-        if (this.isGroupChat())
-        {
+        if (this.isGroupChat()) {
             //anything to do here?
             visibility = View.VISIBLE;
             message = getContext().getString(R.string.this_is_a_group_chat);
             mWarningText.setTextColor(Color.WHITE);
             mStatusWarningView.setBackgroundColor(Color.LTGRAY);
 
-
             mSendButton.setImageResource(R.drawable.ic_send_holo_light);
             mComposeMessage.setHint(R.string.compose_hint);
 
-        }
-        else if (mCurrentChatSession != null) {
+        } else if (mCurrentChatSession != null) {
             IOtrChatSession otrChatSession = null;
 
             try {
@@ -1756,15 +1689,13 @@ public class ChatView extends LinearLayout {
                     }
                 }
 
-
             } catch (RemoteException e) {
                 LogCleaner.error(ImApp.LOG_TAG, "error getting OTR session in ChatView", e);
             }
 
             if (mContactType == Imps.Contacts.TYPE_GROUP) {
                 message = "";
-            }
-            else if (mContactType == Imps.Contacts.TYPE_TEMPORARY) {
+            } else if (mContactType == Imps.Contacts.TYPE_TEMPORARY) {
                 visibility = View.VISIBLE;
                 message = mContext.getString(R.string.contact_not_in_list_warning, mRemoteNickname);
                 mWarningText.setTextColor(Color.WHITE);
@@ -1776,24 +1707,19 @@ public class ChatView extends LinearLayout {
 
             }
 
-
             if (mLastSessionStatus == SessionStatus.PLAINTEXT) {
 
                 mSendButton.setImageResource(R.drawable.ic_send_holo_light);
                 mComposeMessage.setHint(R.string.compose_hint);
 
-
-            }
-            else if (mLastSessionStatus == SessionStatus.ENCRYPTED) {
-
+            } else if (mLastSessionStatus == SessionStatus.ENCRYPTED) {
 
                 mComposeMessage.setHint(R.string.compose_hint_secure);
                 visibility = View.GONE;
 
                 mSendButton.setImageResource(R.drawable.ic_send_secure);
 
-                try
-                {
+                try {
                     String rFingerprint = otrChatSession.getRemoteFingerprint();
                     mIsVerified = otrChatSession.isKeyVerified(mRemoteAddress);
 
@@ -1806,7 +1732,6 @@ public class ChatView extends LinearLayout {
                             message = mContext.getString(R.string.otr_session_status_verified);
                             mStatusWarningView.setBackgroundResource(R.color.otr_green);
 
-
                         }
                     } else {
 
@@ -1814,9 +1739,8 @@ public class ChatView extends LinearLayout {
                         message = mContext.getString(R.string.otr_session_status_plaintext);
 
                     }
+                } catch (RemoteException re) {
                 }
-                catch (RemoteException re){}
-
 
             } else if (mLastSessionStatus == SessionStatus.FINISHED) {
 
@@ -1827,14 +1751,12 @@ public class ChatView extends LinearLayout {
                 mStatusWarningView.setBackgroundColor(Color.DKGRAY);
                 message = mContext.getString(R.string.otr_session_status_finished);
 
-
                 visibility = View.VISIBLE;
             }
 
         }
 
-        if (!isConnected)
-        {
+        if (!isConnected) {
             visibility = View.VISIBLE;
             iconVisibility = View.VISIBLE;
             mWarningText.setTextColor(Color.WHITE);
@@ -1853,18 +1775,15 @@ public class ChatView extends LinearLayout {
 
     }
 
-    public SessionStatus getOtrSessionStatus ()
-    {
+    public SessionStatus getOtrSessionStatus() {
         return mLastSessionStatus;
     }
 
-    public boolean isOtrSessionVerified ()
-    {
+    public boolean isOtrSessionVerified() {
         return mIsVerified;
     }
 
-    public int getRemotePresence ()
-    {
+    public int getRemotePresence() {
         return mPresenceStatus;
     }
 
@@ -1893,19 +1812,17 @@ public class ChatView extends LinearLayout {
             try {
                 getChatSession().markAsRead();
 
-              //  updateWarningView();
+                //  updateWarningView();
 
             } catch (RemoteException e) {
 
                 mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-                LogCleaner.error(ImApp.LOG_TAG, "send message error",e);
+                LogCleaner.error(ImApp.LOG_TAG, "send message error", e);
             }
         }
     }
 
-
     private final class ChatViewHandler extends SimpleAlertHandler {
-
 
         public ChatViewHandler(Activity activity) {
             super(activity);
@@ -1926,14 +1843,15 @@ public class ChatView extends LinearLayout {
                 promptDisconnectedEvent(msg);
                 return;
             case PROMPT_FOR_DATA_TRANSFER:
-                showPromptForData(msg.getData().getString("from"),msg.getData().getString("file"));
+                showPromptForData(msg.getData().getString("from"), msg.getData().getString("file"));
                 break;
             case SHOW_DATA_ERROR:
 
                 String fileName = msg.getData().getString("file");
                 String error = msg.getData().getString("err");
 
-                Toast.makeText(mContext, "Error transferring file: " + error, Toast.LENGTH_LONG).show();
+                Toast.makeText(mContext, "Error transferring file: " + error, Toast.LENGTH_LONG)
+                        .show();
                 mProgressTransfer.setVisibility(View.GONE);
                 break;
             case SHOW_DATA_PROGRESS:
@@ -1944,15 +1862,14 @@ public class ChatView extends LinearLayout {
                 mProgressTransfer.setProgress(progress);
                 mProgressTransfer.setMax(100);
 
-                if (progress >= 95)
-                {
+                if (progress >= 95) {
 
                     mProgressTransfer.setVisibility(View.GONE);
                 }
 
                 break;
-             default:
-                 updateWarningView();
+            default:
+                updateWarningView();
             }
 
             super.handleMessage(msg);
@@ -2248,12 +2165,12 @@ public class ChatView extends LinearLayout {
         }
 
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-		public int getType(int arg0) {
+        public int getType(int arg0) {
             return mInnerCursor.getType(arg0);
         }
 
         @TargetApi(19)
-		@Override
+        @Override
         public Uri getNotificationUri() {
             return mInnerCursor.getNotificationUri();
         }
@@ -2274,7 +2191,6 @@ public class ChatView extends LinearLayout {
         private int mMimeTypeColumn;
         private int mIdColumn;
 
-
         private LayoutInflater mInflater;
 
         public MessageAdapter(Activity context, Cursor c) {
@@ -2287,7 +2203,6 @@ public class ChatView extends LinearLayout {
         }
 
         private void resolveColumnIndex(Cursor c) {
-
 
             mNicknameColumn = c.getColumnIndexOrThrow(Imps.Messages.NICKNAME);
 
@@ -2310,14 +2225,15 @@ public class ChatView extends LinearLayout {
             }
         }
 
-
         @Override
         public int getItemViewType(int position) {
 
             Cursor c = getCursor();
             c.moveToPosition(position);
             int type = c.getInt(mTypeColumn);
-            boolean isLeft = (type == Imps.MessageType.INCOMING_ENCRYPTED)||(type == Imps.MessageType.INCOMING)||(type == Imps.MessageType.INCOMING_ENCRYPTED_VERIFIED);
+            boolean isLeft = (type == Imps.MessageType.INCOMING_ENCRYPTED)
+                             || (type == Imps.MessageType.INCOMING)
+                             || (type == Imps.MessageType.INCOMING_ENCRYPTED_VERIFIED);
 
             if (isLeft)
                 return 0;
@@ -2331,7 +2247,6 @@ public class ChatView extends LinearLayout {
             return 2;
         }
 
-
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
 
@@ -2340,9 +2255,9 @@ public class ChatView extends LinearLayout {
             int type = getItemViewType(cursor.getPosition());
 
             if (type == 0)
-                result     = mInflater.inflate(R.layout.message_view_left, null);
+                result = mInflater.inflate(R.layout.message_view_left, null);
             else
-                result     = mInflater.inflate(R.layout.message_view_right, null);
+                result = mInflater.inflate(R.layout.message_view_right, null);
 
             return result;
         }
@@ -2351,13 +2266,12 @@ public class ChatView extends LinearLayout {
         public void bindView(View view, Context context, Cursor cursor) {
             MessageView messageView = (MessageView) view;
 
-            if (mApp.isThemeDark())
-            {
-                messageView.setMessageBackground(getResources().getDrawable(R.drawable.message_view_rounded_dark));
-            }
-            else
-            {
-                messageView.setMessageBackground(getResources().getDrawable(R.drawable.message_view_rounded_light));
+            if (mApp.isThemeDark()) {
+                messageView.setMessageBackground(getResources().getDrawable(
+                        R.drawable.message_view_rounded_dark));
+            } else {
+                messageView.setMessageBackground(getResources().getDrawable(
+                        R.drawable.message_view_rounded_light));
 
             }
 
@@ -2373,44 +2287,38 @@ public class ChatView extends LinearLayout {
 
             Date date = showTimeStamp ? new Date(timestamp) : null;
             boolean isDelivered = cursor.getLong(mDeliveredColumn) > 0;
-            long showDeliveryInterval = (mimeType == null) ? SHOW_DELIVERY_INTERVAL : SHOW_MEDIA_DELIVERY_INTERVAL;
+            long showDeliveryInterval = (mimeType == null) ? SHOW_DELIVERY_INTERVAL
+                                                          : SHOW_MEDIA_DELIVERY_INTERVAL;
             boolean showDelivery = ((System.currentTimeMillis() - timestamp) > showDeliveryInterval);
 
             DeliveryState deliveryState = DeliveryState.NEUTRAL;
 
             if (showDelivery && !isDelivered && mExpectingDelivery) {
                 deliveryState = DeliveryState.UNDELIVERED;
-            }
-            else if (isDelivered)
-            {
+            } else if (isDelivered) {
                 deliveryState = DeliveryState.DELIVERED;
             }
 
             EncryptionState encState = EncryptionState.NONE;
-            if (messageType == Imps.MessageType.INCOMING_ENCRYPTED)
-            {
+            if (messageType == Imps.MessageType.INCOMING_ENCRYPTED) {
                 messageType = Imps.MessageType.INCOMING;
                 encState = EncryptionState.ENCRYPTED;
-            }
-            else if (messageType == Imps.MessageType.INCOMING_ENCRYPTED_VERIFIED)
-            {
+            } else if (messageType == Imps.MessageType.INCOMING_ENCRYPTED_VERIFIED) {
                 messageType = Imps.MessageType.INCOMING;
-                 encState = EncryptionState.ENCRYPTED_AND_VERIFIED;
-            }
-            else if (messageType == Imps.MessageType.OUTGOING_ENCRYPTED)
-            {
+                encState = EncryptionState.ENCRYPTED_AND_VERIFIED;
+            } else if (messageType == Imps.MessageType.OUTGOING_ENCRYPTED) {
                 messageType = Imps.MessageType.OUTGOING;
                 encState = EncryptionState.ENCRYPTED;
-            }
-            else if (messageType == Imps.MessageType.OUTGOING_ENCRYPTED_VERIFIED)
-            {
+            } else if (messageType == Imps.MessageType.OUTGOING_ENCRYPTED_VERIFIED) {
                 messageType = Imps.MessageType.OUTGOING;
-                 encState = EncryptionState.ENCRYPTED_AND_VERIFIED;
+                encState = EncryptionState.ENCRYPTED_AND_VERIFIED;
             }
 
             switch (messageType) {
             case Imps.MessageType.INCOMING:
-                messageView.bindIncomingMessage(id, messageType, mRemoteAddress, nickname, mimeType, body, date, mMarkup, isScrolling(), encState, isGroupChat(), mPresenceStatus);
+                messageView.bindIncomingMessage(id, messageType, mRemoteAddress, nickname,
+                        mimeType, body, date, mMarkup, isScrolling(), encState, isGroupChat(),
+                        mPresenceStatus);
 
                 break;
 
@@ -2421,17 +2329,18 @@ public class ChatView extends LinearLayout {
                 if (errCode != 0) {
                     messageView.bindErrorMessage(errCode);
                 } else {
-                    messageView.bindOutgoingMessage(id, messageType, null, mimeType, body, date, mMarkup, isScrolling(),
-                            deliveryState, encState);
+                    messageView.bindOutgoingMessage(id, messageType, null, mimeType, body, date,
+                            mMarkup, isScrolling(), deliveryState, encState);
                 }
 
                 break;
 
             default:
-                messageView.bindPresenceMessage(mRemoteAddress, messageType, isGroupChat(), isScrolling());
+                messageView.bindPresenceMessage(mRemoteAddress, messageType, isGroupChat(),
+                        isScrolling());
             }
 
-           // updateWarningView();
+            // updateWarningView();
 
             if (!mExpectingDelivery && isDelivered) {
                 log("Setting delivery icon");
@@ -2454,8 +2363,6 @@ public class ChatView extends LinearLayout {
             }
         }
 
-
-
         public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,
                 int totalItemCount) {
             // do nothing
@@ -2470,8 +2377,8 @@ public class ChatView extends LinearLayout {
                     getChatSession().markAsRead();
                 } catch (RemoteException e) {
 
-                mHandler.showServiceErrorAlert(e.getLocalizedMessage());
-                LogCleaner.error(ImApp.LOG_TAG, "send message error",e);
+                    mHandler.showServiceErrorAlert(e.getLocalizedMessage());
+                    LogCleaner.error(ImApp.LOG_TAG, "send message error", e);
                 }
             }
 

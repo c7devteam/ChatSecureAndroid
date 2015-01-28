@@ -203,6 +203,7 @@ cuentas configuradas.\n\n¡Pulse aquí para añadir una!</string>
   <string name="menu_send_image">Enviar foto</string>
   <string name="menu_send_file">Enviar archivo</string>
   <string name="menu_send_audio">Enviar audio</string>
+  <string name="menu_send_location">Enviar location</string>
   <string name="menu_take_picture">Tomar fotografía</string>
   <string name="file_transfer">Transferencia de fichero</string>
   <string name="transfer_complete">Transferencia completa</string>

@@ -1,13 +1,13 @@
 /*
  * Copyright (C) 2007-2008 Esmertec AG. Copyright (C) 2007-2008 The Android Open
  * Source Project
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -90,6 +90,13 @@ import de.duenndns.ssl.MemorizingTrustManager;
 
 public class ImApp extends Application {
 
+    public static final boolean IS_CUBE7_ONLY = true;
+    public static final boolean IS_TEST_VERSION = true;
+    public static final String SERVER_TEST = "jabber.sevendevs.de";
+    public static final String SERVER_PRODUCT = "jabber.sevendevs.de";
+    public static final String SERVER = "jabber.sevendevs.de";
+    public static final int PORT = 5222;
+
     public static final String LOG_TAG = "GB.ImApp";
 
     public static final String EXTRA_INTENT_SEND_TO_USER = "Send2_U";
@@ -119,7 +126,7 @@ public class ImApp extends Application {
     public static final int DEFAULT_XMPP_PRIORITY = 20;
     public static final String DEFAULT_XMPP_OTR_MODE = "auto";
 
-    public static final String DEFAULT_GROUPCHAT_SERVER = "conference.dukgo.com";
+    public static final String DEFAULT_GROUPCHAT_SERVER = "conference.c7dev.sevendevs.de";
 
     private Locale locale = null;
 
@@ -143,8 +150,10 @@ public class ImApp extends Application {
      */
     ArrayList<Message> mQueue = new ArrayList<Message>();
 
-    /** A flag indicates that we have called tomServiceStarted start the service. */
-//    private boolean mServiceStarted;
+    /**
+     * A flag indicates that we have called tomServiceStarted start the service.
+     */
+    //    private boolean mServiceStarted;
     private Context mApplicationContext;
     private Resources mPrivateResources;
 
@@ -209,14 +218,13 @@ public class ImApp extends Application {
         sImApp.mPrivateResources = activity.getResources();
         sImApp.onCreate();
     }
-*/
+    */
 
     @Override
     public Resources getResources() {
         if (mApplicationContext == this) {
             return super.getResources();
         }
-
         return mPrivateResources;
     }
 
@@ -228,7 +236,6 @@ public class ImApp extends Application {
 
         return mApplicationContext.getContentResolver();
     }
-
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -265,84 +272,68 @@ public class ImApp extends Application {
 
         mBroadcaster = new Broadcaster();
 
-        setAppTheme(null,null);
+        setAppTheme(null, null);
 
         checkLocale();
     }
 
     private boolean mThemeDark = false;
 
-    public boolean isThemeDark ()
-    {
+    public boolean isThemeDark() {
         return mThemeDark;
     }
-    
-    public void setAppTheme (Activity activity)
-    {
+
+    public void setAppTheme(Activity activity) {
         setAppTheme(activity, null);
     }
-    
+
     private final static int COLOR_TOOLBAR_DARK = Color.parseColor("#263238");
     private final static int COLOR_TOOLBAR_LIGHT = Color.parseColor("#B0BEC5");
 
-    public void setAppTheme (Activity activity, Toolbar toolbar)
-    {
+    public void setAppTheme(Activity activity, Toolbar toolbar) {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
         mThemeDark = settings.getBoolean("themeDark", false);
 
-        if (mThemeDark)
-        {
+        if (mThemeDark) {
             setTheme(R.style.AppThemeDark);
 
-
-            if (activity != null)
-            {
+            if (activity != null) {
                 activity.setTheme(R.style.AppThemeDark);
-                if (activity instanceof ActionBarActivity)
-                {
-                    ActionBar ab = ((ActionBarActivity)activity).getSupportActionBar();
-                    
-                    if (ab != null)
-                    {
-                        ab.setBackgroundDrawable(new ColorDrawable(COLOR_TOOLBAR_DARK));                        
-                    }
-                }
-            }      
-            if (toolbar != null)                
-                toolbar.setBackgroundColor(COLOR_TOOLBAR_DARK);
-      
-        }
-        else
-        {
-            setTheme(R.style.AppTheme);
+                if (activity instanceof ActionBarActivity) {
+                    ActionBar ab = ((ActionBarActivity) activity).getSupportActionBar();
 
-
-            if (activity != null)
-            {
-                activity.setTheme(R.style.AppTheme);
-                if (activity instanceof ActionBarActivity)
-                {
-                    ActionBar ab = ((ActionBarActivity)activity).getSupportActionBar();
-                    
-                    if (ab != null)
-                    {
-                        ab.setBackgroundDrawable(new ColorDrawable(COLOR_TOOLBAR_LIGHT));                        
+                    if (ab != null) {
+                        ab.setBackgroundDrawable(new ColorDrawable(COLOR_TOOLBAR_DARK));
                     }
                 }
             }
-            
+            if (toolbar != null)
+                toolbar.setBackgroundColor(COLOR_TOOLBAR_DARK);
+
+        } else {
+            setTheme(R.style.AppTheme);
+
+            if (activity != null) {
+                activity.setTheme(R.style.AppTheme);
+                if (activity instanceof ActionBarActivity) {
+                    ActionBar ab = ((ActionBarActivity) activity).getSupportActionBar();
+
+                    if (ab != null) {
+                        ab.setBackgroundDrawable(new ColorDrawable(COLOR_TOOLBAR_LIGHT));
+                    }
+                }
+            }
+
             if (toolbar != null)
                 toolbar.setBackgroundColor(COLOR_TOOLBAR_LIGHT);
-            
-            
+
         }
 
         Configuration config = getResources().getConfiguration();
         getResources().updateConfiguration(config, getResources().getDisplayMetrics());
 
-        if (mImService != null)
-        {
+        if (mImService != null) {
             boolean debugOn = settings.getBoolean("prefDebug", false);
             try {
                 mImService.enableDebugLogging(debugOn);
@@ -352,14 +343,12 @@ public class ImApp extends Application {
         }
     }
 
-    public void checkLocale ()
-    {
+    public void checkLocale() {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
         Configuration config = getResources().getConfiguration();
 
         String lang = settings.getString(getString(R.string.pref_default_locale), "");
-
 
         if ("".equals(lang)) {
             Properties props = AssetUtil.getProperties("chatsecure.properties", this);
@@ -408,20 +397,15 @@ public class ImApp extends Application {
     }
 
     /**
-    @Override
-    public void onTerminate() {
-        stopImServiceIfInactive();
-        if (mImService != null) {
-            try {
-                mImService.removeConnectionCreatedListener(mConnCreationListener);
-            } catch (RemoteException e) {
-                Log.w(LOG_TAG, "failed to remove ConnectionCreatedListener");
-            }
-        }
-
-        Imps.clearPassphrase(this);
-        super.onTerminate();
-    }*/
+     * @Override public void onTerminate() { stopImServiceIfInactive(); if
+     *           (mImService != null) { try {
+     *           mImService.removeConnectionCreatedListener
+     *           (mConnCreationListener); } catch (RemoteException e) {
+     *           Log.w(LOG_TAG, "failed to remove ConnectionCreatedListener"); }
+     *           }
+     * 
+     *           Imps.clearPassphrase(this); super.onTerminate(); }
+     */
 
     public synchronized void startImServiceIfNeed() {
         startImServiceIfNeed(false);
@@ -435,8 +419,7 @@ public class ImApp extends Application {
         serviceIntent.setComponent(ImServiceConstants.IM_SERVICE_COMPONENT);
         serviceIntent.putExtra(ImServiceConstants.EXTRA_CHECK_AUTO_LOGIN, true);
 
-        if (mImService == null)
-        {
+        if (mImService == null) {
             mApplicationContext.startService(serviceIntent);
             if (!isBoot) {
                 mConnectionListener = new MyConnListener(new Handler());
@@ -445,13 +428,11 @@ public class ImApp extends Application {
 
         if (mImServiceConn != null && !isBoot)
             mApplicationContext
-                .bindService(serviceIntent, mImServiceConn, Context.BIND_AUTO_CREATE);
-
+                    .bindService(serviceIntent, mImServiceConn, Context.BIND_AUTO_CREATE);
 
     }
 
-    public boolean hasActiveConnections ()
-    {
+    public boolean hasActiveConnections() {
         return !mConnections.isEmpty();
 
     }
@@ -473,9 +454,7 @@ public class ImApp extends Application {
         }
     }
 
-
-    public synchronized void forceStopImService()
-    {
+    public synchronized void forceStopImService() {
         if (mImService != null) {
             if (Log.isLoggable(LOG_TAG, Log.DEBUG))
                 log("stop ImService");
@@ -527,19 +506,18 @@ public class ImApp extends Application {
         return mImService != null;
     }
 
- //   public boolean isBackgroundDataEnabled() { //"background data" is a deprectaed concept
-    public static boolean isNetworkAvailableAndConnected (Context context) {
+    //   public boolean isBackgroundDataEnabled() { //"background data" is a deprectaed concept
+    public static boolean isNetworkAvailableAndConnected(Context context) {
         ConnectivityManager manager = (ConnectivityManager) context
                 .getSystemService(CONNECTIVITY_SERVICE);
 
         NetworkInfo nInfo = manager.getActiveNetworkInfo();
 
-        if (nInfo != null)
-        {
-            Log.d(LOG_TAG,"isNetworkAvailableAndConnected? available=" + nInfo.isAvailable() + " connected=" + nInfo.isConnected());
+        if (nInfo != null) {
+            Log.d(LOG_TAG, "isNetworkAvailableAndConnected? available=" + nInfo.isAvailable()
+                           + " connected=" + nInfo.isConnected());
             return nInfo.isAvailable() && nInfo.isConnected();
-        }
-        else
+        } else
             return false; //no network info is a bad idea
     }
 
@@ -695,7 +673,6 @@ public class ImApp extends Application {
                 Map<Integer, Integer> resMap = plugin.getResourceMap();
                 //int[] smileyIcons = plugin.getSmileyIconIds();
 
-
                 BrandingResources res = new BrandingResources(packageRes, resMap,
                         mDefaultBrandingResources);
                 mBrandingResources.put(pluginInfo.mProviderName, res);
@@ -759,14 +736,10 @@ public class ImApp extends Application {
 
             IImConnection im = mConnections.get(providerId);
 
-            if (im != null)
-            {
-                try
-                {
+            if (im != null) {
+                try {
                     im.getState();
-                }
-                catch (RemoteException doe)
-                {
+                } catch (RemoteException doe) {
                     mConnections.clear();
                     //something is wrong
                     fetchActiveConnections();
@@ -810,8 +783,7 @@ public class ImApp extends Application {
         }
     }
 
-    public void deleteAccount (long accountId, long providerId)
-    {
+    public void deleteAccount(long accountId, long providerId) {
         ContentResolver resolver = getContentResolver();
 
         Uri accountUri = ContentUris.withAppendedId(Imps.Account.CONTENT_URI, accountId);
@@ -824,8 +796,6 @@ public class ImApp extends Application {
         ContentUris.appendId(builder, providerId);
         ContentUris.appendId(builder, accountId);
         resolver.delete(builder.build(), null, null);
-
-
 
     }
 
@@ -905,8 +875,7 @@ public class ImApp extends Application {
     }
 
     private void fetchActiveConnections() {
-        if (mImService != null)
-        {
+        if (mImService != null) {
             try {
                 // register the listener before fetch so that we won't miss any connection.
                 mImService.addConnectionCreatedListener(mConnCreationListener);
@@ -915,10 +884,10 @@ public class ImApp extends Application {
                     for (IBinder binder : (List<IBinder>) mImService.getActiveConnections()) {
                         IImConnection conn = IImConnection.Stub.asInterface(binder);
                         long providerId = conn.getProviderId();
-                    //    if (!mConnections.containsKey(providerId)) {
-                            mConnections.put(providerId, conn);
-                            conn.registerConnectionListener(mConnectionListener);
-                      //  }
+                        //    if (!mConnections.containsKey(providerId)) {
+                        mConnections.put(providerId, conn);
+                        conn.registerConnectionListener(mConnectionListener);
+                        //  }
                     }
                 }
             } catch (RemoteException e) {
@@ -931,10 +900,10 @@ public class ImApp extends Application {
         public void onConnectionCreated(IImConnection conn) throws RemoteException {
             long providerId = conn.getProviderId();
             synchronized (mConnections) {
-              //  if (!mConnections.containsKey(providerId)) {
-                    mConnections.put(providerId, conn);
-                    conn.registerConnectionListener(mConnectionListener);
-               // }
+                //  if (!mConnections.containsKey(providerId)) {
+                mConnections.put(providerId, conn);
+                conn.registerConnectionListener(mConnectionListener);
+                // }
             }
             broadcastConnEvent(EVENT_CONNECTION_CREATED, providerId, null);
         }
@@ -953,7 +922,7 @@ public class ImApp extends Application {
 
             try {
 
-               // fetchActiveConnections();
+                // fetchActiveConnections();
 
                 int what = -1;
                 long providerId = conn.getProviderId();
@@ -975,7 +944,7 @@ public class ImApp extends Application {
                 case ImConnection.DISCONNECTED:
                     // NOTE: if this logic is changed, the logic in ImConnectionAdapter.ConnectionAdapterListener must be changed to match
                     what = EVENT_CONNECTION_DISCONNECTED;
-               //     mConnections.remove(providerId);
+                    //     mConnections.remove(providerId);
                     // stop the service if there isn't an active connection anymore.
                     stopImServiceIfInactive();
 
@@ -1024,7 +993,6 @@ public class ImApp extends Application {
         return mImService;
     }
 
-
     public IChatSession getChatSession(long providerId, String remoteAddress) {
         IImConnection conn = getConnection(providerId);
 
@@ -1050,7 +1018,7 @@ public class ImApp extends Application {
 
     public void maybeInit(Activity activity) {
         startImServiceIfNeed();
-        setAppTheme(activity,null);
+        setAppTheme(activity, null);
         ImPluginHelper.getInstance(this).loadAvailablePlugins();
     }
 
@@ -1063,16 +1031,14 @@ public class ImApp extends Application {
         });
     }
 
-
-    private void initTrustManager ()
-    {
-        PinningTrustManager trustPinning = new PinningTrustManager(SystemKeyStore.getInstance(this),XMPPCertPins.getPinList(), 0);
+    private void initTrustManager() {
+        PinningTrustManager trustPinning = new PinningTrustManager(
+                SystemKeyStore.getInstance(this), XMPPCertPins.getPinList(), 0);
         mTrustManager = new MemorizingTrustManager(this, trustPinning);
 
     }
 
-    public MemorizingTrustManager getTrustManager ()
-    {
+    public MemorizingTrustManager getTrustManager() {
         return mTrustManager;
     }
 }

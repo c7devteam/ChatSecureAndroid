@@ -17,19 +17,21 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.support.v4.widget.CursorAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 public class AccountAdapter extends CursorAdapter {
+    String TAG = AccountAdapter.class.getSimpleName();
+
     private LayoutInflater mInflater;
     private int mResId;
     private Cursor mStashCursor;
     private AsyncTask<Void, Void, List<AccountSetting>> mBindTask;
     private Listener mListener;
 
-    public AccountAdapter(Activity context,
-            LayoutInflater.Factory factory, int resId) {
+    public AccountAdapter(Activity context, LayoutInflater.Factory factory, int resId) {
         super(context, null, 0);
         mInflater = LayoutInflater.from(context).cloneInContext(context);
         mInflater.setFactory(factory);
@@ -42,20 +44,20 @@ public class AccountAdapter extends CursorAdapter {
 
     @Override
     public Cursor swapCursor(Cursor newCursor) {
-        if(mBindTask != null) {
+        if (mBindTask != null) {
             mBindTask.cancel(false);
-            mBindTask = null ;
+            mBindTask = null;
         }
 
         if (mStashCursor != null && (!mStashCursor.isClosed()))
-                mStashCursor.close();
+            mStashCursor.close();
 
         mStashCursor = newCursor;
 
         if (mStashCursor != null) {
             // Delay swapping in the cursor until we get the extra info
-           // List<AccountInfo> accountInfoList = getAccountInfoList(mStashCursor) ;
-           // runBindTask((Activity)mContext, accountInfoList);
+            // List<AccountInfo> accountInfoList = getAccountInfoList(mStashCursor) ;
+            // runBindTask((Activity)mContext, accountInfoList);
         }
         return super.swapCursor(mStashCursor);
     };
@@ -67,8 +69,8 @@ public class AccountAdapter extends CursorAdapter {
     private List<AccountInfo> getAccountInfoList(Cursor cursor) {
         List<AccountInfo> aiList = new ArrayList<AccountInfo>();
         cursor.moveToPosition(-1);
-        while( cursor.moveToNext() ) {
-            aiList.add( getAccountInfo(cursor));
+        while (cursor.moveToNext()) {
+            aiList.add(getAccountInfo(cursor));
         }
         return aiList;
     }
@@ -85,7 +87,7 @@ public class AccountAdapter extends CursorAdapter {
         String mSecondRowText;
         boolean mSwitchOn;
         String activeUserName;
-        int connectionStatus ;
+        int connectionStatus;
 
         String domain;
         String host;
@@ -94,13 +96,16 @@ public class AccountAdapter extends CursorAdapter {
 
     }
 
-    AccountInfo getAccountInfo( Cursor cursor ) {
+    AccountInfo getAccountInfo(Cursor cursor) {
         AccountInfo accountInfo = new AccountInfo();
         accountInfo.providerId = cursor.getInt(cursor.getColumnIndexOrThrow(Imps.Provider._ID));
         if (!cursor.isNull(cursor.getColumnIndexOrThrow(Imps.Provider.ACTIVE_ACCOUNT_ID))) {
-            accountInfo.activeUserName = cursor.getString(cursor.getColumnIndexOrThrow(Imps.Provider.ACTIVE_ACCOUNT_USERNAME));
-            accountInfo.dbConnectionStatus = cursor.getInt(cursor.getColumnIndexOrThrow(Imps.Provider.ACCOUNT_PRESENCE_STATUS));
-            accountInfo.presenceStatus = cursor.getInt(cursor.getColumnIndexOrThrow(Imps.Provider.ACCOUNT_CONNECTION_STATUS));
+            accountInfo.activeUserName = cursor.getString(cursor
+                    .getColumnIndexOrThrow(Imps.Provider.ACTIVE_ACCOUNT_USERNAME));
+            accountInfo.dbConnectionStatus = cursor.getInt(cursor
+                    .getColumnIndexOrThrow(Imps.Provider.ACCOUNT_PRESENCE_STATUS));
+            accountInfo.presenceStatus = cursor.getInt(cursor
+                    .getColumnIndexOrThrow(Imps.Provider.ACCOUNT_CONNECTION_STATUS));
         }
         return accountInfo;
     }
@@ -122,24 +127,23 @@ public class AccountAdapter extends CursorAdapter {
 
     }
 
-    private void runBindTask( final Activity context, final List<AccountInfo> accountInfoList ) {
+    private void runBindTask(final Activity context, final List<AccountInfo> accountInfoList) {
         final Resources resources = context.getResources();
         final ContentResolver resolver = context.getContentResolver();
-        final ImApp mApp = (ImApp)context.getApplication();
+        final ImApp mApp = (ImApp) context.getApplication();
 
         // if called multiple times
         if (mBindTask != null)
             mBindTask.cancel(false);
         //
 
-
         mBindTask = new AsyncTask<Void, Void, List<AccountSetting>>() {
 
             @Override
             protected List<AccountSetting> doInBackground(Void... params) {
                 List<AccountSetting> accountSettingList = new ArrayList<AccountSetting>();
-                for( AccountInfo ai : accountInfoList ) {
-                    accountSettingList.add( getAccountSettings(ai) );
+                for (AccountInfo ai : accountInfoList) {
+                    accountSettingList.add(getAccountSettings(ai));
                 }
                 return accountSettingList;
             }
@@ -147,13 +151,14 @@ public class AccountAdapter extends CursorAdapter {
             private AccountSetting getAccountSettings(AccountInfo ai) {
                 AccountSetting as = new AccountSetting();
 
+                Cursor pCursor = resolver.query(Imps.ProviderSettings.CONTENT_URI,
+                        new String[] { Imps.ProviderSettings.NAME, Imps.ProviderSettings.VALUE },
+                        Imps.ProviderSettings.PROVIDER + "=?",
+                        new String[] { Long.toString(ai.providerId) }, null);
 
-                Cursor pCursor = resolver.query(Imps.ProviderSettings.CONTENT_URI,new String[] {Imps.ProviderSettings.NAME, Imps.ProviderSettings.VALUE},Imps.ProviderSettings.PROVIDER + "=?",new String[] { Long.toString(ai.providerId)},null);
-
-                if (pCursor != null)
-                {
-                    Imps.ProviderSettings.QueryMap settings =
-                            new Imps.ProviderSettings.QueryMap(pCursor, resolver, ai.providerId, false , null);
+                if (pCursor != null) {
+                    Imps.ProviderSettings.QueryMap settings = new Imps.ProviderSettings.QueryMap(
+                            pCursor, resolver, ai.providerId, false, null);
 
                     as.connectionStatus = ai.dbConnectionStatus;
                     as.activeUserName = ai.activeUserName;
@@ -161,7 +166,7 @@ public class AccountAdapter extends CursorAdapter {
                     as.host = settings.getServer();
                     as.port = settings.getPort();
                     as.isTor = settings.getUseTor();
-
+                    Log.i(TAG, "domain=" + as.domain);
                     IImConnection conn = mApp.getConnection(ai.providerId);
                     if (conn == null) {
                         as.connectionStatus = ImConnection.DISCONNECTED;

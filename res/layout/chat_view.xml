@@ -17,40 +17,39 @@
  * limitations under the License.
  */
 -->
-<info.guardianproject.otr.app.im.app.ChatView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<info.guardianproject.otr.app.im.app.ChatView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/chatView"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="0dp"   
-    android:padding="0dp"
- >
+    android:layout_margin="0dp"
+    android:orientation="vertical"
+    android:padding="0dp" >
 
-    <ListView android:id="@+id/history"
+    <ListView
+        android:id="@+id/history"
         android:layout_width="match_parent"
         android:layout_height="0dip"
-        android:layout_weight="1"            
-        android:stackFromBottom="true"               
-  		android:layout_margin="0dp"
-        android:padding="0dp"
-        android:paddingBottom="6dip"
+        android:layout_margin="0dp"
+        android:layout_weight="1"
         android:divider="#00000000"
         android:dividerHeight="10dp"
+        android:padding="0dp"
+        android:paddingBottom="6dip"
         android:scrollingCache="true"
-        android:transcriptMode="normal"
-         />
+        android:stackFromBottom="true"
+        android:transcriptMode="normal" />
 
-  <LinearLayout 
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:orientation="horizontal"
-	     android:layout_gravity="fill_vertical"
-	             android:gravity="bottom"
-	     android:padding="3sp"
-	     android:background="?inputBackground"
-	     >
-	<!-- 
+    <LinearLayout
+        android:id="@+id/textPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="fill_vertical"
+        android:background="?inputBackground"
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:padding="3sp" >
+
+        <!--
         <ImageButton
         android:id="@+id/btnActionBox"
         android:layout_width="32dip"
@@ -60,88 +59,95 @@
       
         android:paddingBottom="5sp"
         android:src="@drawable/ic_btn_round_more_normal" />
-       -->
-    <ImageButton
-        android:id="@+id/btnEmoji"
-        android:layout_width="32dip"
-        android:layout_height="32dip"
-        android:background="@drawable/ad_selectable_background"
-        android:scaleType="centerInside"
-        
-        android:paddingBottom="5sp"
-        android:src="@drawable/smiley_smile" />
-    
-      <org.ironrabbit.type.CustomTypefaceEditText
-           android:id="@+id/composeMessage"
-            android:layout_width="0dip"           
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:inputType="textShortMessage|textAutoCorrect|textCapSentences|textMultiLine|textImeMultiLine"
-            android:imeOptions="actionSend|flagNoEnterAction"
-            android:maxLines="4"
-            android:hint="@string/compose_hint"
-             android:fontFamily="sans-serif-light"             
-            />
-           
-    <ImageButton
-        android:id="@+id/btnSend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/ad_selectable_background"
-        android:fontFamily="sans-serif-light"
-        android:paddingBottom="3sp"
-        android:paddingLeft="5sp"
-        android:paddingRight="5sp"
-        android:paddingTop="3sp"
-        android:src="@drawable/ic_send_holo_light" />
+        -->
 
-      </LinearLayout>
-  
-   <android.support.v4.view.ViewPager
-               android:id="@+id/emojiPager"
+        <ImageButton
+            android:id="@+id/btnEmoji"
+            android:layout_width="32dip"
+            android:layout_height="32dip"
+            android:layout_gravity="right|center_vertical"
+            android:background="@drawable/ad_selectable_background"
+            android:paddingBottom="5sp"
+            android:scaleType="centerInside"
+            android:src="@drawable/smiley_smile" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" >
+
+            <org.ironrabbit.type.CustomTypefaceEditText
+                android:id="@+id/composeMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-light"
+                android:hint="@string/compose_hint"
+                android:imeOptions="actionSend|flagNoEnterAction"
+                android:inputType="textShortMessage|textAutoCorrect|textCapSentences|textMultiLine|textImeMultiLine"
+                android:maxLines="4"
+                android:paddingRight="32dip" />
+        </FrameLayout>
+
+        <ImageButton
+            android:id="@+id/btnSend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ad_selectable_background"
+            android:fontFamily="sans-serif-light"
+            android:paddingBottom="3sp"
+            android:paddingLeft="5sp"
+            android:paddingRight="5sp"
+            android:paddingTop="3sp"
+            android:src="@drawable/ic_send_holo_light" />
+    </LinearLayout>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/emojiPager"
         android:layout_width="match_parent"
         android:layout_height="140dip"
-        android:visibility="gone"
-        
-       >
-     <android.support.v4.view.PagerTabStrip
-        android:id="@+id/emoji_title_strip"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp" 
-       android:background="#565552"
-        android:textColor="#dddddd"
-        />
+        android:visibility="gone" >
+
+        <android.support.v4.view.PagerTabStrip
+            android:id="@+id/emoji_title_strip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:background="#565552"
+            android:paddingBottom="4dp"
+            android:paddingTop="4dp"
+            android:textColor="#dddddd" />
     </android.support.v4.view.ViewPager>
-    
-   
-    <LinearLayout android:id="@+id/invitationPanel"
+
+    <LinearLayout
+        android:id="@+id/invitationPanel"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
+        android:background="@drawable/text_divider_horizontal"
         android:orientation="vertical"
-        android:visibility="gone"
-        
-        android:background="@drawable/text_divider_horizontal">
+        android:visibility="gone" >
 
-        <TextView android:id="@+id/txtInvitation"
+        <TextView
+            android:id="@+id/txtInvitation"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textColor="#ffad45d6"
-            android:text="@string/invitation_prompt" />
+            android:text="@string/invitation_prompt"
+            android:textColor="#ffad45d6" />
 
-        <LinearLayout android:layout_width="fill_parent"
+        <LinearLayout
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal" >
 
-            <Button android:id="@+id/btnAccept"
+            <Button
+                android:id="@+id/btnAccept"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/accept_invitation" />
 
-            <Button android:id="@+id/btnDecline"
+            <Button
+                android:id="@+id/btnDecline"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="10dip"
@@ -149,70 +155,66 @@
         </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout android:id="@+id/subscription"
+    <LinearLayout
+        android:id="@+id/subscription"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:orientation="vertical"
         android:background="@color/background_light"
-        
-        android:visibility="gone">
+        android:orientation="vertical"
+        android:visibility="gone" >
 
-        <TextView android:id="@+id/txtSubscription"
+        <TextView
+            android:id="@+id/txtSubscription"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="@string/subscription_prompt" />
 
-        <LinearLayout android:layout_width="fill_parent"
+        <LinearLayout
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal" >
 
-            <Button android:id="@+id/btnApproveSubscription"
+            <Button
+                android:id="@+id/btnApproveSubscription"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/approve_subscription" />
 
-            <Button android:id="@+id/btnDeclineSubscription"
+            <Button
+                android:id="@+id/btnDeclineSubscription"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="10dip"
                 android:text="@string/decline_subscription" />
         </LinearLayout>
     </LinearLayout>
-    
-    
 
-    <LinearLayout android:id="@+id/warning"
+    <LinearLayout
+        android:id="@+id/warning"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="horizontal"
-        android:visibility="gone">
+        android:visibility="gone" >
 
-
-        <TextView android:id="@+id/warningText"
+        <TextView
+            android:id="@+id/warningText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:padding="3sp"
-            android:textColor="#aaff0000"
-            android:text="@string/disconnected_warning"
             android:fontFamily="sans-serif-light"
-             />
-        
-        
+            android:padding="3sp"
+            android:text="@string/disconnected_warning"
+            android:textColor="#aaff0000" />
     </LinearLayout>
-    
-    
-      <ProgressBar
-         android:id="@+id/progressTransfer"
-         android:layout_width="match_parent"
-         android:layout_height="wrap_content"
-         style="?android:attr/progressBarStyleHorizontal"
-         android:visibility="gone"
-         android:padding="0dp"
-         
-          />
-    
-      
+
+    <ProgressBar
+        android:id="@+id/progressTransfer"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="0dp"
+        android:visibility="gone" />
+
 </info.guardianproject.otr.app.im.app.ChatView>
