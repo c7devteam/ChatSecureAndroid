@@ -16,69 +16,6 @@
  */
 package info.guardianproject.otr.app.im.app;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.database.Cursor;
-import android.graphics.drawable.Drawable;
-import android.media.MediaScannerConnection;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.os.RemoteException;
-import android.provider.MediaStore;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.SimpleOnPageChangeListener;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.Toolbar;
-import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
-import android.text.SpannableString;
-import android.text.style.ImageSpan;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.SimpleCursorAdapter;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
-
 import info.guardianproject.otr.IOtrChatSession;
 import info.guardianproject.otr.OtrAndroidKeyManagerImpl;
 import info.guardianproject.otr.OtrChatManager;
@@ -112,6 +49,76 @@ import net.java.otr4j.OtrPolicy;
 import net.java.otr4j.session.SessionStatus;
 
 import org.ironrabbit.type.CustomTypefaceManager;
+
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.database.Cursor;
+import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.os.RemoteException;
+import android.provider.MediaStore;
+import android.provider.MediaStore.MediaColumns;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.SimpleOnPageChangeListener;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
+import android.text.SpannableString;
+import android.text.TextUtils;
+import android.text.style.ImageSpan;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.SimpleCursorAdapter;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+import angel.zhuoxiu.location.LocationHelper;
+
+import com.bonofa.cube7api.AttachManager;
+import com.bonofa.cube7api.TokenManager;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 public class NewChatActivity extends FragmentActivity implements View.OnCreateContextMenuListener {
 
@@ -495,7 +502,6 @@ public class NewChatActivity extends FragmentActivity implements View.OnCreateCo
 
                 if (host.contains(settings.getDomain())) {
                     if (conn.getState() == ImConnection.LOGGED_IN) {
-
                         result = conn;
                         settings.close();
                         pCursor.close();
@@ -1047,24 +1053,33 @@ public class NewChatActivity extends FragmentActivity implements View.OnCreateCo
     }
 
     void startLocationPicker() {
-//        Intent intent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
-//        if (!isCallable(intent)) {
-//            intent = new Intent("android.provider.MediaStore.RECORD_SOUND");
-//            intent.addCategory("android.intent.category.DEFAULT");
-//
-//            if (!isCallable(intent)) {
-//                intent = new Intent(Intent.ACTION_GET_CONTENT);
-//                intent.setType("audio/*");
-//
-//                if (!isCallable(intent))
-//                    return;
-//            }
-//        }
-//        startActivityForResult(intent, REQUEST_SEND_LOCATION);
-        
-        Uri uri = Uri.parse("geo:38.899533,-77.036476");
-        Intent it = new Intent(Intent.ACTION_VIEW,uri);
-        startActivity(it);
+        new Thread() {
+            public void run() {
+                LocationHelper helper = LocationHelper.getInstance(NewChatActivity.this);
+                Location location = helper.getLastLocation();
+                if (location == null) {
+                    Toast.makeText(NewChatActivity.this, "null", 1).show();
+                    return;
+                }
+                final double latitude = location.getLatitude();
+                final double longitude = location.getLongitude();
+                String address = helper.getAddressByMapAPI(latitude, longitude);
+                final Uri uri = Uri.parse("geo:" + latitude + "," + longitude + "?q="
+                                          + (TextUtils.isEmpty(address) ? "" : address));
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        handleSend(uri, "Geolocation");
+//                        Intent it = new Intent(Intent.ACTION_VIEW, uri);
+//                        startActivity(it);
+                    }
+                });
+            };
+        }.start();
+
+        //        Intent it = new Intent(Intent.ACTION_VIEW, uri);
+        //        startActivity(it);
+
+        //  handleSend(uri, "Geolocation");
     }
 
     private boolean isCallable(Intent intent) {
@@ -1110,12 +1125,18 @@ public class NewChatActivity extends FragmentActivity implements View.OnCreateCo
         try {
             // import
             FileInfo info = SystemServices.getFileInfoFromURI(this, contentUri);
+            Log.i(TAG, "info.path=" + info.path + " \ncontentUri=" + contentUri + "\n"
+                       + getRealPathFromURI(contentUri));
             String sessionId = getCurrentSessionId();
             Uri vfsUri = IocVfs.importContent(sessionId, info.path);
             // send
             boolean sent = handleSend(vfsUri, (mimeType == null) ? info.type : mimeType);
+            sendAttach(new File(getRealPathFromURI(contentUri)));
+            if (true) {
+                return;
+            }
             if (!sent) {
-                // not deleting if not sent
+                // not deleting if not sent 
                 return;
             }
             // autu delete
@@ -1145,10 +1166,13 @@ public class NewChatActivity extends FragmentActivity implements View.OnCreateCo
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent resultIntent) {
+        Log.d(TAG, "onActivityResult");
         if (resultCode == RESULT_OK) {
+            Uri uri1 = resultIntent.getData();
             if (requestCode == REQUEST_SEND_IMAGE || requestCode == REQUEST_SEND_FILE
                 || requestCode == REQUEST_SEND_AUDIO) {
                 Uri uri = resultIntent.getData();
+
                 if (uri == null) {
                     return;
                 }
@@ -1302,6 +1326,12 @@ public class NewChatActivity extends FragmentActivity implements View.OnCreateCo
     }
 
     private boolean handleSend(Uri uri, String mimeType) {
+        if (mimeType.equals("Geolocation")) {
+            ChatView cView = getCurrentChatView();
+            cView.sendMessage(uri.toString());
+            return true;
+        }
+
         try {
             FileInfo info = SystemServices.getFileInfoFromURI(this, uri);
 
@@ -1316,13 +1346,26 @@ public class NewChatActivity extends FragmentActivity implements View.OnCreateCo
                             info.type = "application/octet-stream";
 
                     String offerId = UUID.randomUUID().toString();
-                    session.offerData(offerId, info.path, info.type);
+
+                    ContentResolver cr = getContentResolver();
+                    //                    Cursor pCursor = cr.query(Imps.ProviderSettings.CONTENT_URI,
+                    //                            new String[] { Imps.ProviderSettings.NAME, Imps.ProviderSettings.VALUE },
+                    //                            Imps.ProviderSettings.PROVIDER + "=?",
+                    //                            new String[] { Long.toString(mProviderId) }, null);
+                    //                    Imps.ProviderSettings.QueryMap settings = new Imps.ProviderSettings.QueryMap(
+                    //                            pCursor, cr, mProviderId, false /* don't keep updated */, null /* no handler */);
+                    //session.offerData(offerId, info.path, info.type);
+
                     ChatView cView = getCurrentChatView();
+                    // cView.sendMessage(session.getId() + " " + session.getName());
                     int type = cView.isOtrSessionVerified() ? Imps.MessageType.OUTGOING_ENCRYPTED_VERIFIED
                                                            : Imps.MessageType.OUTGOING_ENCRYPTED;
-                    Imps.insertMessageInDb(getContentResolver(), false, session.getId(), true,
-                            null, uri.toString(), System.currentTimeMillis(), type, 0, offerId,
-                            info.type);
+
+                    if (false) {
+                        Imps.insertMessageInDb(getContentResolver(), false, session.getId(), true,
+                                null, uri.toString(), System.currentTimeMillis(), type, 0, offerId,
+                                info.type);
+                    }
                     return true; // sent
                 }
 
@@ -1334,6 +1377,55 @@ public class NewChatActivity extends FragmentActivity implements View.OnCreateCo
             Log.e(ImApp.LOG_TAG, "error sending file", e);
         }
         return false; // was not sent
+    }
+
+    public static String getFilePathFromContentUri(Uri selectedVideoUri,
+            ContentResolver contentResolver) {
+        String filePath;
+        String[] filePathColumn = { MediaColumns.DATA };
+
+        Cursor cursor = contentResolver.query(selectedVideoUri, filePathColumn, null, null, null);
+        //      也可用下面的方法拿到cursor  
+        //      Cursor cursor = this.context.managedQuery(selectedVideoUri, filePathColumn, null, null, null);  
+
+        cursor.moveToFirst();
+
+        int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+        filePath = cursor.getString(columnIndex);
+        cursor.close();
+        return filePath;
+    }
+
+    void sendAttach(final File file) {
+        new AsyncTask<Void, Void, String>() {
+
+            @Override
+            protected String doInBackground(Void... params) {
+                ChatView cView = getCurrentChatView();
+                ContentResolver cr = getContentResolver();
+                String password = Imps.Account.getPassword(cr, cView.mAccountId);
+                String account = Imps.Account.getUserName(cr, cView.mAccountId);
+                long mProviderId = cView.mProviderId;
+                Cursor pCursor = cr.query(Imps.ProviderSettings.CONTENT_URI,
+                        new String[] { Imps.ProviderSettings.NAME, Imps.ProviderSettings.VALUE },
+                        Imps.ProviderSettings.PROVIDER + "=?",
+                        new String[] { Long.toString(mProviderId) }, null);
+                Imps.ProviderSettings.QueryMap settings = new Imps.ProviderSettings.QueryMap(
+                        pCursor, cr, mProviderId, false /* don't keep updated */, null /* no handler */);
+                Log.e(TAG, account + "@" + settings.getDomain() + "/" + password);
+                String temp = "bonofa1@bonofa.com";
+                String token = TokenManager.getC7Token(NewChatActivity.this, temp, password, true);
+                Log.e(TAG, "file=" + file.getAbsolutePath() + " " + file.exists());
+                String result = AttachManager.uploadFile(token, file);
+                Log.e(TAG, "result=" + result);
+                return result;
+            }
+
+            protected void onPostExecute(String result) {
+                Log.i(TAG, "result=" + result);
+            };
+
+        }.execute();
     }
 
     void showInvitationHasSent(String contact) {

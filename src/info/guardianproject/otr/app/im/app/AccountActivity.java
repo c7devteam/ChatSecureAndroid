@@ -246,7 +246,7 @@ public class AccountActivity extends ActionBarActivity {
             }
 
             isEdit = true;
-
+            Log.i(TAG, "uri=" + uri);
             Cursor cursor = cr.query(uri, ACCOUNT_PROJECTION, null, null, null);
 
             if (cursor == null) {

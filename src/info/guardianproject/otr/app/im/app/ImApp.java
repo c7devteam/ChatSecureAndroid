@@ -94,7 +94,7 @@ public class ImApp extends Application {
     public static final boolean IS_TEST_VERSION = true;
     public static final String SERVER_TEST = "jabber.sevendevs.de";
     public static final String SERVER_PRODUCT = "jabber.sevendevs.de";
-    public static final String SERVER = "jabber.sevendevs.de";
+    public static final String SERVER = SERVER_TEST;
     public static final int PORT = 5222;
 
     public static final String LOG_TAG = "GB.ImApp";
